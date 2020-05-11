@@ -124,21 +124,15 @@ class Skymap(object):
         --------
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
+        # ADW: probably still not the best way to do this...
+        try:
+            import healsparse as hsp
+            if isinstance(hpxmap, hsp.HealSparseMap):
+                hpxmap,pixel,nside = healpix.hsp2hpx(hpxmap)
+        except ImportError:
+            pass
 
-        is_hsp = healpix.check_hpxmap(hpxmap,pixel,nside)
-        if is_hsp:
-            if nside is not None and nside < hpxmap.nside_sparse:
-                hpxmap.degrade(nside)
-            elif nside is not None and nside > hpxmap.nside_sparse:
-                return NotImplementedError("Map upgrading is not implemented, try with different nside")
-            else:
-                nside = hpxmap.nside_sparse
-            if pixel is not None:
-                hpxmap = hpxmap.get_values_pix(hp.ring2nest(nside, pixel))
-            else:
-                _hpxmap = hpxmap.get_values_pix(hpxmap.valid_pixels)
-                pixel = hp.nest2ring(nside, hpxmap.valid_pixels)
-                hpxmap = _hpxmap
+        healpix.check_hpxmap(hpxmap,pixel,nside)
         hpxmap = healpix.masked_array(hpxmap,badval)
 
         if smooth:
@@ -150,8 +144,7 @@ class Skymap(object):
 
         vmin,vmax = np.percentile(hpxmap.compressed(),[2.5,97.5])
 
-        defaults = dict(rasterized=True, vmin=vmin, vmax=vmax,
-                        transform=ccrs.PlateCarree())
+        defaults = dict(rasterized=True, vmin=vmin, vmax=vmax)
         setdefaults(kwargs,defaults)
 
         lon,lat,values = healpix.hpx2xy(hpxmap,pixel=pixel,nside=nside,
