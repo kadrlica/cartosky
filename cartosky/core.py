@@ -95,7 +95,7 @@ class Skymap(object):
 
     def smooth(self,hpxmap,badval=hp.UNSEEN,sigma=None):
         """ Smooth a healpix map """
-        healpix.check_hpxmap(hpxmap,None,None)
+        _ = healpix.check_hpxmap(hpxmap,None,None)
         hpxmap = healpix.masked_array(hpxmap,badval)
         hpxmap.fill_value = np.ma.median(hpxmap)
         smooth = hp.smoothing(hpxmap,sigma=np.radians(sigma),verbose=False)
@@ -109,9 +109,10 @@ class Skymap(object):
 
         Parameters:
         -----------
-        hpxmap: input healpix map
-        pixel:  explicit pixel indices (required for partial maps)
-        nside:  explicit nside of the map (required for partial maps)
+        hpxmap: input healpix or HealSparse map
+        pixel:  explicit pixel indices in RING scheme (required for partial healpix maps)
+        nside:  explicit nside of the map (required for partial healpix maps) if
+                passed while visualizing a HealSparse map it will doegrade the map to this nside.
         xsize:  resolution of the output image
         lonra:  longitude range [-180,180] (deg)
         latra:  latitude range [-90,90] (deg)
@@ -124,7 +125,20 @@ class Skymap(object):
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
 
-        healpix.check_hpxmap(hpxmap,pixel,nside)
+        is_hsp = healpix.check_hpxmap(hpxmap,pixel,nside)
+        if is_hsp:
+            if nside is not None and nside < hpxmap.nside_sparse:
+                hpxmap.degrade(nside)
+            elif nside is not None and nside > hpxmap.nside_sparse:
+                return NotImplementedError("Map upgrading is not implemented, try with different nside")
+            else:
+                nside = hpxmap.nside_sparse
+            if pixel is not None:
+                hpxmap = hpxmap.get_values_pix(hp.ring2nest(nside, pixel))
+            else:
+                _hpxmap = hpxmap.get_values_pix(hpxmap.valid_pixels)
+                pixel = hp.nest2ring(nside, hpxmap.valid_pixels)
+                hpxmap = _hpxmap
         hpxmap = healpix.masked_array(hpxmap,badval)
 
         if smooth:

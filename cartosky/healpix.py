@@ -17,18 +17,26 @@ def masked_array(array,badval=hp.UNSEEN):
     return np.ma.MaskedArray(array,mask=mask)
 
 def check_hpxmap(hpxmap,pixel,nside):
-    if pixel is None and not hp.isnpixok(hpxmap.shape[-1]):
-        msg = "'hpxmap' has invalid dimension: %s"%(hpxmap.shape)
-        raise Exception(msg)
+    # Check if healsparse is installed
+    try:
+        import healsparse as hsp
+        is_hsp = isinstance(hpxmap, hsp.HealSparseMap) # Check if hpxmap is a HealSparseMap
+    except ImportError:
+        is_hsp = False 
+    if not is_hsp:  
+        if pixel is None and not hp.isnpixok(hpxmap.shape[-1]):
+            msg = "'hpxmap' has invalid dimension: %s"%(hpxmap.shape)
+            raise Exception(msg)
 
-    if pixel is not None and nside is None:
-        msg = "'nside' must be specified for explicit maps"
-        raise Exception(msg)
+        if pixel is not None and nside is None:
+            msg = "'nside' must be specified for explicit maps"
+            raise Exception(msg)
 
-    if pixel is not None and (hpxmap.shape != pixel.shape):
-        msg = "'hpxmap' and 'pixel' must have same shape"
-        raise Exception(msg)
-    
+        if pixel is not None and (hpxmap.shape != pixel.shape):
+            msg = "'hpxmap' and 'pixel' must have same shape"
+            raise Exception(msg)
+    return is_hsp
+
 def create_map(hpxmap,pixel,nside,badval=hp.UNSEEN):
     """ Create the full map from hpxmap,pixel,nside combo
     """
