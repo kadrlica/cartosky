@@ -19,6 +19,12 @@ from cartosky import Skymap,McBrydeSkymap,OrthoSkymap
 from cartosky import SurveySkymap,SurveyMcBryde,SurveyOrtho
 from cartosky import DESSkymap,BlissSkymap
 
+try:
+   import healsparse as hsp
+   hsp_avail = True
+except ImportError:
+   hsp_avail = False
+
 nside = 8
 
 SKYMAPS = [Skymap,McBrydeSkymap,OrthoSkymap]
@@ -73,6 +79,22 @@ class TestSkymap(unittest.TestCase):
             m = cls()
             m.draw_hpxmap(hpxmap,pix,nside,xsize=400)
             plt.title('Partial HEALPix Map (%s)'%cls.__name__)
+
+    @unittest.skipUnless(hsp_avail, "Skip over this routine if healsparse is not installed")
+    def test_draw_healsparse(self):
+        """ Test drawing a HealSparse map """
+        nside_sparse=4096
+        nside_coverage=64
+        hsp_map = hsp.HealSparseMap.make_empty(nside_coverage, nside_sparse, dtype=np.int, sentinel=0)
+        circ = hsp.Circle(ra=0, dec=0, radius=2.0, value=10)
+        hsp.geom.realize_geom([circ], hsp_map)
+        m = cartosky.Skymap(projection='cyl')
+        llcrnrlon,urcrnrlon=3.0,-3.0
+        llcrnrlat,urcrnrlat=-3,3.0
+        m.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat])
+        m.draw_hpxmap(hsp_map)
+        plt.title('HEALPix Zoom (nside=%i)'%nside_sparse)
+        m.draw_hpxmap(hsp_map, nside=1024) # Checking that the map changes resolution
 
     def test_draw_hpxbin(self):
         """ Test drawing hpxbin from points """
