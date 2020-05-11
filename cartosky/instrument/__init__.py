@@ -2,8 +2,8 @@
 import os
 import numpy as np
 
-from skymap.utils import get_datadir
-from skymap.utils import SphericalRotator
+from cartosky.utils import get_datadir
+from cartosky.utils import SphericalRotator
 
 class FocalPlane(object):
     """Class for storing and manipulating the corners of the DECam CCDs.

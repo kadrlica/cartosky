@@ -10,6 +10,8 @@ __version__ = get_versions()['version']
 del get_versions
 
 from cartosky.core import Skymap, McBrydeSkymap, OrthoSkymap
+from cartosky.survey import SurveySkymap,SurveyMcBryde,SurveyOrtho
+from cartosky.survey import DESSkymap, BlissSkymap
 
 import warnings
 from matplotlib.cbook import MatplotlibDeprecationWarning

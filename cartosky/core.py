@@ -8,6 +8,7 @@ import os
 from os.path import expandvars
 import logging
 from collections import OrderedDict as odict
+import warnings
 
 import matplotlib
 from matplotlib import mlab
@@ -35,8 +36,9 @@ class Skymap(object):
 
     def __init__(self, projection='cyl', **kwargs):
         setdefaults(kwargs,self.defaults)
-        do_global = kwargs.pop('global',True)
-        do_grid   = kwargs.pop('gridlines',True)
+        do_global    = kwargs.pop('global',True)
+        do_grid      = kwargs.pop('gridlines',True)
+        do_celestial = kwargs.pop('celestial',False) #noop
 
         # Eventually want to subclass GeoAxes
         ax = plt.gca()
@@ -47,8 +49,13 @@ class Skymap(object):
         self.projection = cartosky.proj.Proj(projection, **kwargs)
         self.ax = fig.add_subplot(*subargs,projection=self.projection)
 
-        if do_global: self.ax.set_global()
-        if do_grid:   self.ax.gridlines()
+        if do_global:
+            self.ax.set_global()
+        if do_grid:
+            self.grid = self.ax.gridlines(linestyle=':')
+
+        # Better grid lines?
+        #https://github.com/SciTools/cartopy/pull/1117
 
         self.wrap_angle = np.mod(kwargs['lon_0'] + 180,360)
 
@@ -63,6 +70,21 @@ class Skymap(object):
     def proj(self,lon,lat):
         """ Remove points outside of projection """
         return self(lon,lat)
+
+    def plot(self, *args, **kwargs):
+        self.ax.plot(*args, **kwargs)
+
+    def scatter(self, *args, **kwargs):
+        self.ax.scatter(*args, **kwargs)
+
+    def pcolormesh(self, *args, **kwargs):
+        self.ax.pcolormesh(*args, **kwargs)
+
+    #... need to add all the other functions...
+
+    def get_map_range(self, hpxmap, pixel=None, nside=None):
+        """ Calculate the longitude and latitude range for an implicit map. """
+        return healpix.get_map_range(hpxmap,pixel,nside,wrap_angle=self.wrap_angle)
 
     def hpx2xy(self, hpxmap, pixel=None, nside=None, xsize=800,
                lonra=None, latra=None):
@@ -125,23 +147,35 @@ class Skymap(object):
         im = self.ax.pcolormesh(lon,lat,values,**kwargs)
         return im,lon,lat,values
 
-    def plot(self, *args, **kwargs):
-        defaults = dict(transform=ccrs.PlateCarree())
-        setdefaults(kwargs,defaults)
-        self.ax.plot(*args, **kwargs)
+    def draw_hpxbin(self, lon, lat, nside=256, **kwargs):
+        """
+        Create a healpix histogram of the counts.
 
-    def scatter(self, *args, **kwargs):
-        defaults = dict(transform=ccrs.PlateCarree())
-        setdefaults(kwargs,defaults)
-        self.ax.scatter(*args, **kwargs)
+        Like `hexbin` from matplotlib
 
-    def pcolormesh(self, *args, **kwargs):
-        defaults = dict(transform=ccrs.PlateCarree())
-        setdefaults(kwargs,defaults)
-        self.ax.pcolormesh(*args, **kwargs)
+        Parameters:
+        -----------
+        lon : input longitude (deg)
+        lat : input latitude (deg)
+        nside : heaplix nside resolution
+        kwargs : passed to draw_hpxmap and plt.pcolormesh
 
+        Returns:
+        --------
+        hpxmap, im : healpix map and image
+        """
+        try:
+            pix = hp.ang2pix(nside,lon,lat,lonlat=True)
+        except TypeError:
+            pix = hp.ang2pix(nside,np.radians(90-lat),np.radians(lon))
 
-    #... need to add all the other functions...
+        npix = hp.nside2npix(nside)
+        hpxmap = hp.UNSEEN*np.ones(npix)
+        idx,cts = np.unique(pix,return_counts=True)
+        hpxmap[idx] = cts
+
+        return hpxmap,self.draw_hpxmap(hpxmap,**kwargs)
+
 
     def tissot(self, lons=None, lats=None, rad_deg=1.0, n_samples=80, **kwargs):
         """
@@ -165,7 +199,9 @@ class Skymap(object):
         """
         # This will need to be re-implemented...
         # cartosky.GeoAxes.tissot makes some assumptions about Geodesic radius...
-        raise Exception("cartosky.GeoAxes.tissot needs to be re-implemented")
+        msg = "cartosky.GeoAxes.tissot needs to be re-implemented"
+        #raise Exception(msg)
+        warnings.warn(msg)
 
     @staticmethod
     def wrap_index(lon, lat, wrap=180.):
@@ -380,6 +416,127 @@ class Skymap(object):
         plt.text(proj[0],proj[1], 'SMC', weight='bold',
                  fontsize=8, ha='center', va='center', color='k')
 
+
+    def set_scale(self, array, log=False, sigma=1.0, norm=None):
+        if isinstance(array,np.ma.MaskedArray):
+            out = np.ma.copy(array)
+        else:
+            out = np.ma.array(array,mask=np.isnan(array),fill_value=np.nan)
+
+        if sigma > 0:
+            out.data[:] = nd.gaussian_filter(out.filled(0),sigma=sigma)[:]
+
+        if norm is None:
+            norm = np.percentile(out.compressed(),97.5)
+
+        if log:
+            out = np.log10(out)
+            if norm: norm = np.log10(norm)
+
+        out /= norm
+        out = np.clip(out,0.0,1.0)
+        return out
+
+    def draw_inset_colorbar(self,format=None,label=None,ticks=None,fontsize=11,**kwargs):
+        defaults = dict(width="25%", height="5%", loc=7,
+                        bbox_to_anchor=(0.,-0.04,1,1))
+        setdefaults(kwargs,defaults)
+
+        ax = plt.gca()
+        im = plt.gci()
+        cax = inset_axes(ax,bbox_transform=ax.transAxes,**kwargs)
+        cmin,cmax = im.get_clim()
+
+        if (ticks is None) and (cmin is not None) and (cmax is not None):
+            cmed = (cmax+cmin)/2.
+            delta = (cmax-cmin)/10.
+            ticks = np.array([cmin+delta,cmed,cmax-delta])
+
+        tmin = np.min(np.abs(ticks[0]))
+        tmax = np.max(np.abs(ticks[1]))
+
+        if format is None:
+            if (tmin < 1e-2) or (tmax > 1e3):
+                format = '$%.1e$'
+            elif (tmin > 0.1) and (tmax < 100):
+                format = '$%.1f$'
+            elif (tmax > 100):
+                format = '$%i$'
+            else:
+                format = '$%.2g$'
+                #format = '%.2f'
+
+        kwargs = dict(format=format,ticks=ticks,orientation='horizontal')
+
+        if format == 'custom':
+            ticks = np.array([cmin,0.85*cmax])
+            kwargs.update(format='$%.0e$',ticks=ticks)
+
+        cbar = plt.colorbar(cax=cax,**kwargs)
+        cax.xaxis.set_ticks_position('top')
+        cax.tick_params(axis='x', labelsize=fontsize)
+
+        if format == 'custom':
+            ticklabels = cax.get_xticklabels()
+            for i,l in enumerate(ticklabels):
+                val,exp = ticklabels[i].get_text().split('e')
+                ticklabels[i].set_text(r'$%s \times 10^{%i}$'%(val,int(exp)))
+            cax.set_xticklabels(ticklabels)
+
+        if label is not None:
+            cbar.set_label(label,size=fontsize)
+            cax.xaxis.set_label_position('top')
+
+        plt.sca(ax)
+        return cbar,cax
+
+    def zoom_to_fit(self, hpxmap, pixel=None, nside=None):
+        lonra, latra = self.get_map_range(hpxmap, pixel, nside)
+        self.zoom_to(lonra,latra)
+
+    def zoom_to(self, lonra, latra):
+        """ Zoom the map to a specific longitude and latitude range.
+
+        Parameters:
+        -----------
+        lonra : Longitude range [lonmin,lonmax]
+        latra : Latitude range [latmin,latmax]
+
+        Returns:
+        --------
+        None
+        """
+
+        (lonmin,lonmax), (latmin,latmax) = lonra, latra
+
+        ax = plt.gca()
+        self.llcrnrx,self.llcrnry = self(lonmin,latmin)
+        self.urcrnrx,self.urcrnry = self(lonmax,latmax)
+
+        ax.set_xlim(self.llcrnrx,self.urcrnrx)
+        ax.set_ylim(self.llcrnry,self.urcrnry)
+
+        #self.set_axes_limits(ax=ax)
+
+    def draw_focal_planes(self, ra, dec, **kwargs):
+        from cartosky.instrument.decam import DECamFocalPlane
+        defaults = dict(alpha=0.2,color='red',edgecolors='none',lw=0,
+                        transform=ccrs.PlateCarree())
+        setdefaults(kwargs,defaults)
+        ra,dec = np.atleast_1d(ra,dec)
+        if len(ra) != len(dec):
+            msg = "Dimensions of 'ra' and 'dec' do not match"
+            raise ValueError(msg)
+        decam = DECamFocalPlane()
+        # Should make sure axis exists....
+        ax = plt.gca()
+        for _ra,_dec in zip(ra,dec):
+            corners = decam.project(self,_ra,_dec)
+            collection = matplotlib.collections.PolyCollection(corners,**kwargs)
+            ax.add_collection(collection)
+        plt.draw()
+
+    draw_decam = draw_focal_planes
 
 class McBrydeSkymap(Skymap):
     defaults = dict(Skymap.defaults)

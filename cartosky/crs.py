@@ -135,3 +135,42 @@ class McBrydeThomasFlatPolarQuartic(_WarpedRectangularProjection):
         """
         """
         return 1e5
+
+class KavrayskiyVII(_WarpedRectangularProjection):
+    """
+    The `Kavrayskiy VII \
+<https://en.wikipedia.org/wiki/Kavrayskiy_VII_projection>`__ projection.
+    """
+    #: Registered projection name.
+    name = 'kavrayskiyVII'
+
+    def __init__(
+        self, central_longitude=0, globe=None,
+        false_easting=None, false_northing=None
+    ):
+        """
+        %(proj.init)s
+        """
+        if globe is None:
+            globe = SkySphere()
+
+        if globe.ellipse is not None:
+            warnings.warn(
+                f'The {self.name!r} projection does not handle '
+                'elliptical globes.'
+            )
+
+        proj4_params = {'proj': 'kav7', 'lon_0': central_longitude}
+        super().__init__(
+            proj4_params, central_longitude,
+            false_easting=false_easting,
+            false_northing=false_northing,
+            globe=globe
+        )
+
+    @property
+    def threshold(self):
+        """
+        %(proj.reso)s
+        """
+        return 1e5

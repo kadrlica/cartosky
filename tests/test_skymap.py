@@ -14,10 +14,10 @@ import pylab as plt
 import numpy as np
 import healpy as hp
 
-import skymap
-from skymap import Skymap,McBrydeSkymap,OrthoSkymap
-from skymap import SurveySkymap,SurveyMcBryde,SurveyOrtho
-from skymap import DESSkymap,BlissSkymap
+import cartosky
+from cartosky import Skymap,McBrydeSkymap,OrthoSkymap
+from cartosky import SurveySkymap,SurveyMcBryde,SurveyOrtho
+from cartosky import DESSkymap,BlissSkymap
 
 nside = 8
 
@@ -93,20 +93,25 @@ class TestSkymap(unittest.TestCase):
         nside = 4096*2**5
         ra,dec = 45,-45
         radius = 0.05
-        pixels = skymap.healpix.ang2disc(nside,ra,dec,radius)
+        pixels = cartosky.healpix.ang2disc(nside,ra,dec,radius)
         values = pixels
 
         plt.figure()
-        # Use the Cassini projection (because we can)
-        m = Skymap(projection='cass', lon_0=ra, lat_0=dec, celestial=False,
-                   llcrnrlon=ra+2*radius,urcrnrlon=ra-2*radius,
-                   llcrnrlat=dec-2*radius,urcrnrlat=dec+2*radius)
+        m = Skymap(projection='cyl', celestial=False, gridlines=False)
+
+        llcrnrlon,urcrnrlon=ra+2*radius,ra-2*radius,
+        llcrnrlat,urcrnrlat=dec-2*radius,dec+2*radius
+        m.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat])
 
         m.draw_hpxmap(values,pixels,nside=nside,xsize=400)
-        m.draw_parallels(np.linspace(dec-2*radius,dec+2*radius,5),
-                         labelstyle='+/-',labels=[1,0,0,0])
-        m.draw_meridians(np.linspace(ra-2*radius,ra+2*radius,5),
-                         labelstyle='+/-',labels=[0,0,0,1])
+        # Draw the grid lines
+        draw_labels = True
+        xlocs = np.linspace(ra-2*radius,ra+2*radius,5)
+        ylocs = np.linspace(dec-2*radius,dec+2*radius,5)
+        grid = m.ax.gridlines(draw_labels=draw_labels,
+                              xlocs=xlocs,ylocs=ylocs,
+                              linestyle=':')
+
         plt.title('HEALPix Zoom (nside=%i)'%nside)
 
 
@@ -118,38 +123,55 @@ class TestSkymap(unittest.TestCase):
 
         plt.figure()
         # Use the Cassini projection (because we can)
-        m = Skymap(projection='cass', lon_0=ra, lat_0=dec, celestial=False,
-                   llcrnrlon=ra+2*radius,urcrnrlon=ra-2*radius,
-                   llcrnrlat=dec-2*radius,urcrnrlat=dec+2*radius)
+        #m = Skymap(projection='cass', lon_0=ra, lat_0=dec, celestial=False,
+        #           llcrnrlon=ra+2*radius,urcrnrlon=ra-2*radius,
+        #           llcrnrlat=dec-2*radius,urcrnrlat=dec+2*radius)
+        m = Skymap(projection='cyl', celestial=False, gridlines=False)
+        llcrnrlon,urcrnrlon = ra+2*radius, ra-2*radius
+        llcrnrlat,urcrnrlat = dec-2*radius, dec+2*radius
+        m.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat])
 
         # Can plot individual fields
         m.draw_focal_planes([ra+delta/2],[dec-delta/2],color='g')
         # Or as arrays
         m.draw_focal_planes([ra,ra-delta,ra-delta],[dec,dec+delta,dec-delta],color='r')
         # Draw the grid lines
-        m.draw_parallels(np.linspace(dec-2*radius,dec+2*radius,5),
-                         labelstyle='+/-',labels=[1,0,0,0])
-        m.draw_meridians(np.linspace(ra-2*radius,ra+2*radius,5),
-                         labelstyle='+/-',labels=[0,0,0,1])
+        draw_labels = True
+        xlocs = np.linspace(ra-2*radius,ra+2*radius,5)
+        ylocs = np.linspace(dec-2*radius,dec+2*radius,5)
+        m.ax.gridlines(draw_labels=draw_labels,
+                       xlocs=xlocs,ylocs=ylocs,
+                       linestyle=':')
+        #m.draw_parallels(np.linspace(dec-2*radius,dec+2*radius,5),
+        #                 labelstyle='+/-',labels=[1,0,0,0])
+        #m.draw_meridians(np.linspace(ra-2*radius,ra+2*radius,5),
+        #                 labelstyle='+/-',labels=[0,0,0,1])
         plt.title('DECam Focal Planes')
 
     def test_zoom_to_fit(self):
         nside = 64
         ra,dec = 15,-45
         radius = 10.0
-        pixels = skymap.healpix.ang2disc(nside,ra,dec,radius)
+        pixels = cartosky.healpix.ang2disc(nside,ra,dec,radius)
         values = pixels
 
         fig,axes = plt.subplots(1,3,figsize=(12,3))
         for i,cls in enumerate(SKYMAPS):
             plt.sca(axes[i])
-            m = cls()
+            m = cls(gridlines=False)
             m.draw_hpxmap(values,pixels,nside=nside,xsize=200)
             m.zoom_to_fit(values,pixels,nside)
-            m.draw_parallels(np.linspace(dec-2*radius,dec+2*radius,5),
-                             labelstyle='+/-',labels=[1,0,0,0])
-            m.draw_meridians(np.linspace(ra-2*radius,ra+2*radius,5),
-                             labelstyle='+/-',labels=[0,0,0,1])
+            draw_labels = i==0
+            xlocs = np.linspace(ra-2*radius,ra+2*radius,5)
+            ylocs = np.linspace(dec-2*radius,dec+2*radius,5)
+            m.ax.gridlines(draw_labels=draw_labels,
+                           xlocs=xlocs,ylocs=ylocs,
+                           linestyle=':')
+
+            #m.draw_parallels(np.linspace(dec-2*radius,dec+2*radius,5),
+            #                 labelstyle='+/-',labels=[1,0,0,0])
+            #m.draw_meridians(np.linspace(ra-2*radius,ra+2*radius,5),
+            #                 labelstyle='+/-',labels=[0,0,0,1])
             plt.title('Zoom to Fit (%s)'%cls.__name__)
 
 

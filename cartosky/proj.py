@@ -21,6 +21,7 @@ CARTOPY_PROJS.update({
     'aitoff': pcrs.Aitoff,
     'hammer': pcrs.Hammer,
     'mbtfpq': pcrs.McBrydeThomasFlatPolarQuartic,
+    'kav7'  : pcrs.KavrayskiyVII,
 })
 CARTOPY_PROJS_UNAVAIL = {
     'aea': 'AlbersEqualArea',
