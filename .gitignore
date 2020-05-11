@@ -1,0 +1,21 @@
+### Emacs
+\#*#
+\.#*
+*~
+
+### Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+tutorial/.ipynb_checkpoints/
+
+### Latex
+*.fls
+*.aux
+*.log
+*.fdb_*
+*.out
+*.blg
+*.bbl
