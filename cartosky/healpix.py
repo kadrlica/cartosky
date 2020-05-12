@@ -17,6 +17,7 @@ def masked_array(array,badval=hp.UNSEEN):
     return np.ma.MaskedArray(array,mask=mask)
 
 def check_hpxmap(hpxmap,pixel,nside):
+    # Check if healsparse is installed
     if pixel is None and not hp.isnpixok(hpxmap.shape[-1]):
         msg = "'hpxmap' has invalid dimension: %s"%(hpxmap.shape)
         raise Exception(msg)
@@ -28,15 +29,30 @@ def check_hpxmap(hpxmap,pixel,nside):
     if pixel is not None and (hpxmap.shape != pixel.shape):
         msg = "'hpxmap' and 'pixel' must have same shape"
         raise Exception(msg)
-    
+
 def create_map(hpxmap,pixel,nside,badval=hp.UNSEEN):
     """ Create the full map from hpxmap,pixel,nside combo
     """
     if pixel is None: return hpxmap
+
+    if nside > 2**14:
+        msg = "large memory usage for map with nside=%d"%nside
+        raise MemoryError(msg)
+    elif nside > 2**12:
+        msg = "large memory usage for map with nside=%d"%nside
+        warning.warn(msg)
+
     m = badval*np.ones(hp.nside2npix(nside),dtype=hpxmap.dtype)
     m[pixel] = hpxmap
     return m
-    
+
+def hsp2hpx(hspmap):
+    """ Convert a healsparse map to a sparse healpix map """
+    nside = hspmap.nside_sparse
+    pixels = hp.nest2ring(nside, hspmap.valid_pixels)
+    hpxmap = hspmap.get_values_pix(pixels)
+    return hpxmap, pixels, nside
+
 def get_map_range(hpxmap, pixel=None, nside=None, wrap_angle=180):
     """ Calculate the longitude and latitude range for a map. """
     check_hpxmap(hpxmap,pixel,nside)

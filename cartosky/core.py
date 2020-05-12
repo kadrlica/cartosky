@@ -95,7 +95,7 @@ class Skymap(object):
 
     def smooth(self,hpxmap,badval=hp.UNSEEN,sigma=None):
         """ Smooth a healpix map """
-        healpix.check_hpxmap(hpxmap,None,None)
+        _ = healpix.check_hpxmap(hpxmap,None,None)
         hpxmap = healpix.masked_array(hpxmap,badval)
         hpxmap.fill_value = np.ma.median(hpxmap)
         smooth = hp.smoothing(hpxmap,sigma=np.radians(sigma),verbose=False)
@@ -109,9 +109,10 @@ class Skymap(object):
 
         Parameters:
         -----------
-        hpxmap: input healpix map
-        pixel:  explicit pixel indices (required for partial maps)
-        nside:  explicit nside of the map (required for partial maps)
+        hpxmap: input healpix or HealSparse map
+        pixel:  explicit pixel indices in RING scheme (required for partial healpix maps)
+        nside:  explicit nside of the map (required for partial healpix maps) if
+                passed while visualizing a HealSparse map it will doegrade the map to this nside.
         xsize:  resolution of the output image
         lonra:  longitude range [-180,180] (deg)
         latra:  latitude range [-90,90] (deg)
@@ -123,6 +124,13 @@ class Skymap(object):
         --------
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
+        # ADW: probably still not the best way to do this...
+        try:
+            import healsparse as hsp
+            if isinstance(hpxmap, hsp.HealSparseMap):
+                hpxmap,pixel,nside = healpix.hsp2hpx(hpxmap)
+        except ImportError:
+            pass
 
         healpix.check_hpxmap(hpxmap,pixel,nside)
         hpxmap = healpix.masked_array(hpxmap,badval)
@@ -136,8 +144,7 @@ class Skymap(object):
 
         vmin,vmax = np.percentile(hpxmap.compressed(),[2.5,97.5])
 
-        defaults = dict(rasterized=True, vmin=vmin, vmax=vmax,
-                        transform=ccrs.PlateCarree())
+        defaults = dict(rasterized=True, vmin=vmin, vmax=vmax)
         setdefaults(kwargs,defaults)
 
         lon,lat,values = healpix.hpx2xy(hpxmap,pixel=pixel,nside=nside,
