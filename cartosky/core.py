@@ -28,6 +28,7 @@ from cartosky.utils import cel2gal, gal2cel
 from cartosky import healpix
 
 import cartosky.proj
+from shapely.geometry.polygon import Polygon
 
 class Skymap(object):
     """ Base class for creating Skymap objects. """
@@ -288,17 +289,15 @@ class Skymap(object):
 
     def draw_polygon(self,filename,**kwargs):
         """ Draw a polygon footprint. """
-        defaults=dict(color='k', lw=2)
-        setdefaults(kwargs,defaults)
-
         poly = np.loadtxt(filename,dtype=[('ra',float),('dec',float)])
         return self.draw_polygon_radec(poly['ra'],poly['dec'],**kwargs)
 
     def draw_polygon_radec(self,ra,dec,**kwargs):
-        defaults=dict(transform=ccrs.PlateCarree())
+        defaults=dict(crs=ccrs.Geodetic(), facecolor='none', edgecolor='red')
         setdefaults(kwargs,defaults)
-        #xy = self.proj(*self.roll(ra,dec,self.wrap_angle))
-        return self.ax.plot(ra,dec,**kwargs)
+        poly = Polygon([(ra[i], dec[i]) for i in range(len(ra))][::-1])
+        self.ax.add_geometries([poly], **defaults)
+        return poly
 
     def draw_polygons(self,filename,**kwargs):
         """Draw a text file containing multiple polygons"""
