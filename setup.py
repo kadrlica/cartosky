@@ -18,7 +18,7 @@ setup(
         'matplotlib',
         'numpy',
         'scipy',
-        'cartopy',
+        'cartopy >= 0.18.0',
         'ephem',
         'healpy > 1.10.2', # This is required for `lonlat` argument
         'astropy',
