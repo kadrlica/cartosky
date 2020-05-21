@@ -5,9 +5,12 @@ Generic python script.
 __author__ = "Alex Drlica-Wagner"
 
 import functools
+import matplotlib.ticker as mticker
 
-from cartopy.mpl import geoaxes
 import cartopy.crs as ccrs
+from cartopy.mpl.geoaxes import GeoAxes
+
+from cartosky.utils import setdefaults
 
 def default_transform(self, func, *args, transform=None, **kwargs):
     """
@@ -50,15 +53,18 @@ def default_crs(self, func, *args, crs=None, **kwargs):
             raise err
         args, crs = args[:-1], args[-1]
         result = func(self, *args, crs=crs, **kwargs)
-    # Fix extent, so axes tight bounding box gets correct box!
-    # From this issue:
-    # https://github.com/SciTools/cartopy/issues/1207#issuecomment-439975083
-    if name == 'set_extent':
-        clipped_path = self.outline_patch.orig_path.clip_to_bbox(self.viewLim)
-        self.outline_patch._path = clipped_path
-        self.background_patch._path = clipped_path
+
     return result
 
+def default_gridlines(self, func, *args, **kwargs):
+    """
+    Default gridlines options.
+    """
+    fmt = mticker.FuncFormatter(lambda v, pos: '{:g}'.format(v))
+    defaults = dict(linestyle=':',xformatter=fmt,yformatter=fmt, draw_labels=True)
+    setdefaults(kwargs,defaults)
+    result = func(self, *args, **kwargs)
+    return result
 
 def _wrapper_decorator(driver):
     """
@@ -84,64 +90,69 @@ def _wrapper_decorator(driver):
 
 _default_transform = _wrapper_decorator(default_transform)
 _default_crs       = _wrapper_decorator(default_crs)
+_default_gridlines = _wrapper_decorator(default_gridlines)
 
-class SkyAxes(geoaxes.GeoAxes):
+class SkyAxes(GeoAxes):
     """ Subclass cartopy.GeoAxes """
 
     # Change gridlines default to ls=':'
 
+    gridlines = _default_gridlines(
+        GeoAxes.gridlines
+    )
+
     plot = _default_transform(
-        geoaxes.GeoAxes.plot
+        GeoAxes.plot
     )
     scatter = _default_transform(
-        geoaxes.GeoAxes.scatter
+        GeoAxes.scatter
     )
     fill_between = _default_transform(
-        geoaxes.GeoAxes.fill_between
+        GeoAxes.fill_between
     )
     fill_betweenx = _default_transform(
-        geoaxes.GeoAxes.fill_betweenx
+        GeoAxes.fill_betweenx
     )
     contour = _default_transform(
-        geoaxes.GeoAxes.contour
+        GeoAxes.contour
     )
     contourf = _default_transform(
-        geoaxes.GeoAxes.contourf
+        GeoAxes.contourf
     )
     pcolor = _default_transform(
-        geoaxes.GeoAxes.pcolor
+        GeoAxes.pcolor
     )
     pcolormesh = _default_transform(
-        geoaxes.GeoAxes.pcolormesh
+        GeoAxes.pcolormesh
     )
     quiver = _default_transform(
-        geoaxes.GeoAxes.quiver
+        GeoAxes.quiver
     )
     streamplot = _default_transform(
-        geoaxes.GeoAxes.streamplot
+        GeoAxes.streamplot
     )
     barbs = _default_transform(
-        geoaxes.GeoAxes.barbs
+        GeoAxes.barbs
     )
     tripcolor = _default_transform(
-        geoaxes.GeoAxes.tripcolor
+        GeoAxes.tripcolor
     )
     tricontour = _default_transform(
-        geoaxes.GeoAxes.tricontour
+        GeoAxes.tricontour
     )
     tricontourf = _default_transform(
-        geoaxes.GeoAxes.tricontourf
+        GeoAxes.tricontourf
     )
     get_extent = _default_crs(
-        geoaxes.GeoAxes.get_extent
+        GeoAxes.get_extent
     )
     set_extent = _default_crs(
-        geoaxes.GeoAxes.set_extent
+        GeoAxes.set_extent
     )
     set_xticks = _default_crs(
-        geoaxes.GeoAxes.set_xticks
+        GeoAxes.set_xticks
     )
     set_yticks = _default_crs(
-        geoaxes.GeoAxes.set_yticks
+        GeoAxes.set_yticks
     )
 
