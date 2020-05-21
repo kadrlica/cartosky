@@ -20,7 +20,7 @@ import healpy as hp
 import scipy.ndimage as nd
 
 import cartopy.crs as ccrs
-from shapely.geometry.polygon import Polygon
+from shapely.geometry.polygon import Polygon, LineString
 
 from cartosky.utils import setdefaults,get_datadir
 from cartosky.utils import cel2gal, gal2cel
@@ -83,7 +83,6 @@ class Skymap(object):
         date = ephem.Date(date) if date else ephem.now()
         self.observer.date = date
 
-
     # Wrap mpl.axes plotting functions through cartosky.skyaxes.SkyAxes
 
     def plot(self, *args, **kwargs):
@@ -122,8 +121,8 @@ class Skymap(object):
         """
         Use pcolor/pcolormesh to draw healpix map.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         hpxmap: input healpix or HealSparse map
         pixel:  explicit pixel indices in RING scheme (required for partial healpix maps)
         nside:  explicit nside of the map (required for partial healpix maps) if
@@ -135,8 +134,8 @@ class Skymap(object):
         smooth: gaussian smoothing kernel (deg)
         kwargs: passed to pcolormesh
 
-        Returns:
-        --------
+        Returns
+        -------
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
         # ADW: probably still not the best way to do this...
@@ -227,7 +226,7 @@ class Skymap(object):
 
     @staticmethod
     def wrap_index(lon, lat, wrap=180.):
-        """ Find the index where the array wraps.
+        """ DEPRECATED: Find the index where the array wraps.
         """
         # No wrap: ignore
         if wrap is None:  return None
@@ -260,7 +259,8 @@ class Skymap(object):
 
     @classmethod
     def roll(cls,lon,lat,wrap=180.):
-        """ Roll an lon,lat combination to split 180 boundary
+        """ DEPRECATED: Roll an lon,lat combination to split 180 boundary
+
         Parameters:
         -----------
         lon : right ascension (deg)
@@ -300,6 +300,32 @@ class Skymap(object):
 
         return np.split(lon,[idx]), np.split(lat,[idx])
 
+    def draw_line_radec(self,ra,dec,**kwargs):
+        """Draw a line assuming a Geodetic transform.
+
+        Parameters
+        ----------
+        ra    : right ascension (deg)
+        dec   : declination (deg)
+        kwargs: passed to plot
+
+        Returns
+        -------
+        line  : line
+        """
+        defaults=dict(transform=ccrs.Geodetic(),ls='-')
+        setdefaults(kwargs,defaults)
+        line = self.ax.plot(ra,dec,**kwargs)
+        return line
+
+    def draw_line_radec(self,ra,dec,**kwargs):
+        color=kwargs.pop('c',kwargs.pop('color','k'))
+        defaults=dict(crs=ccrs.Geodetic(),edgecolor=color,facecolor='none')
+        setdefaults(kwargs,defaults)
+        line = LineString(list(zip(ra,dec))[::-1])
+        self.ax.add_geometries([line],**kwargs)
+        return line
+
     def draw_polygon_radec(self,ra,dec,**kwargs):
         """Draw a shapely Polygon from a list of ra,dec coordinates.
 
@@ -307,7 +333,7 @@ class Skymap(object):
         ----------
         ra    : right
         dec   : declination
-        kwargs: passed to shapely.Polygon
+        kwargs: passed to add_geometries
 
         Returns
         -------
@@ -316,7 +342,7 @@ class Skymap(object):
         defaults=dict(crs=ccrs.Geodetic(), facecolor='none', edgecolor='red')
         setdefaults(kwargs,defaults)
         poly = Polygon([(ra[i], dec[i]) for i in range(len(ra))][::-1])
-        self.ax.add_geometries([poly], **defaults)
+        self.ax.add_geometries([poly], **kwargs)
         return poly
 
     def draw_polygon(self,filename,**kwargs):
@@ -398,22 +424,23 @@ class Skymap(object):
 
     def draw_milky_way(self,width=10,**kwargs):
         """ Draw the Milky Way galaxy. """
-        defaults = dict(color='k',lw=1.5,ls='-')
+        defaults = dict(lw=1.5,ls='-')
         setdefaults(kwargs,defaults)
 
         glon = np.linspace(0,360,500)
         glat = np.zeros_like(glon)
-        ra,dec = self.roll(*gal2cel(glon,glat),wrap=self.wrap_angle)
-        ra -= 360*(ra > 180)
+        ra,dec = gal2cel(glon,glat)
 
-        self.draw_polygon_radec(ra,dec,**kwargs)
+        line = self.draw_line_radec(ra,dec,**kwargs)
+        ret = [line]
 
         if width:
-            kwargs.update(dict(ls='--',lw=1))
+            kwargs.update(ls='--',lw=1)
             for delta in [+width,-width]:
-                ra,dec = self.roll(*gal2cel(glon,glat+delta))
-                ra -= 360*(ra > 180)
-                self.draw_polygon_radec(ra,dec,**kwargs)
+                ra,dec = gal2cel(glon,glat+delta)
+                line = self.draw_line_radec(ra,dec,**kwargs)
+                ret += [line]
+        return ret
 
     def draw_lmc(self,**kwargs):
         from cartosky.constants import RA_LMC, DEC_LMC, RADIUS_LMC

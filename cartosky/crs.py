@@ -14,13 +14,17 @@ __all__ = [
     'Aitoff', 'Hammer', 'SkySphere'
 ]
 
+# Default radius of the Globe.
+# Eventually should be possible to use the unit sphere.
+RADIUS=1.0e6
+
 class SkySphere(Globe):
     """
     Spherical ccrs.Globe for sky plotting.
     """
 
     def __init__(self,*args,**kwargs):
-        defaults = dict(ellipse=None,semimajor_axis=1.0,semiminor_axis=1.0)
+        defaults = dict(ellipse=None,semimajor_axis=RADIUS,semiminor_axis=RADIUS)
         kwargs = setdefaults(kwargs,defaults)
         super().__init__(*args,**kwargs)
 
