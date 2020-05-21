@@ -12,23 +12,21 @@ import warnings
 
 import matplotlib
 from matplotlib import mlab
+from matplotlib.collections import LineCollection
 import pylab as plt
 import numpy as np
 import ephem
 import healpy as hp
 import scipy.ndimage as nd
 
-from matplotlib.collections import LineCollection
-from matplotlib.patches import Polygon
-
 import cartopy.crs as ccrs
+from shapely.geometry.polygon import Polygon
 
 from cartosky.utils import setdefaults,get_datadir
 from cartosky.utils import cel2gal, gal2cel
 from cartosky import healpix
 
 import cartosky.proj
-from shapely.geometry.polygon import Polygon
 
 class Skymap(object):
     """ Base class for creating Skymap objects. """
@@ -286,22 +284,42 @@ class Skymap(object):
 
         return np.split(lon,[idx]), np.split(lat,[idx])
 
-
-    def draw_polygon(self,filename,**kwargs):
-        """ Draw a polygon footprint. """
-        poly = np.loadtxt(filename,dtype=[('ra',float),('dec',float)])
-        return self.draw_polygon_radec(poly['ra'],poly['dec'],**kwargs)
-
     def draw_polygon_radec(self,ra,dec,**kwargs):
+        """Draw a shapely Polygon from a list of ra,dec coordinates.
+
+        Parameters
+        ----------
+        ra    : right
+        dec   : declination
+        kwargs: passed to shapely.Polygon
+
+        Returns
+        -------
+        poly  : the Polygon
+        """
         defaults=dict(crs=ccrs.Geodetic(), facecolor='none', edgecolor='red')
         setdefaults(kwargs,defaults)
         poly = Polygon([(ra[i], dec[i]) for i in range(len(ra))][::-1])
         self.ax.add_geometries([poly], **defaults)
         return poly
 
-    def draw_polygons(self,filename,**kwargs):
-        """Draw a text file containing multiple polygons"""
-        data = np.genfromtxt(filename,names=['ra','dec','poly'])
+    def draw_polygon(self,filename,**kwargs):
+        """Draw a text file containing ra,dec coordinates of polygon(s)
+
+        Parameters
+        ----------
+        filename: name of the file containing the polygon(s) [ra,dec,poly]
+        kwargs:   keyword arguments passed to
+
+        Returns
+        -------
+        poly:     polygons
+        """
+        try:
+            data = np.genfromtxt(filename,names=['ra','dec','poly'])
+        except ValueError:
+            data = np.genfromtxt(filename,names=['ra','dec'])
+            data = mlab.rec_append_fields(data,'poly',np.zeros(len(data)))
 
         ret = []
         for p in np.unique(data['poly']):
@@ -312,32 +330,8 @@ class Skymap(object):
 
         return ret
 
-    def draw_paths(self,filename,**kwargs):
-        """Draw a text file containing multiple polygons"""
-        try:
-            data = np.genfromtxt(filename,names=['ra','dec','poly'])
-        except ValueError:
-            data = np.genfromtxt(filename,names=['ra','dec'])
-            data = mlab.rec_append_fields(data,'poly',np.zeros(len(data)))
-
-        ret = []
-        for p in np.unique(data['poly']):
-            poly = data[data['poly'] == p]
-            path,patch = self.draw_path_radec(poly['ra'],poly['dec'],**kwargs)
-            ret += [(path,patch)]
-        return ret
-
-    def draw_path_radec(self,ra,dec,**kwargs):
-        #xy = self.proj(*self.roll(ra,dec,self.wrap_angle))
-        #vertices = np.vstack(xy).T
-        defaults=dict(transform=ccrs.PlateCarree())
-        setdefaults(kwargs,defaults)
-
-        vertices = np.vstack([ra,dec]).T
-        path = matplotlib.path.Path(vertices)
-        patch = matplotlib.patches.PathPatch(path,**kwargs)
-        plt.gca().add_artist(patch)
-        return path,patch
+    # Alias for draw
+    draw_polygons = draw_polygon
 
     def draw_zenith(self, radius=1.0, **kwargs):
         """
