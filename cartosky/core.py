@@ -334,8 +334,9 @@ class Skymap(object):
         try:
             data = np.genfromtxt(filename,names=['ra','dec','poly'])
         except ValueError:
+            from numpy.lib.recfunctions import append_fields
             data = np.genfromtxt(filename,names=['ra','dec'])
-            data = mlab.rec_append_fields(data,'poly',np.zeros(len(data)))
+            data = append_fields(data,'poly',np.zeros(len(data)))
 
         ret = []
         for p in np.unique(data['poly']):
