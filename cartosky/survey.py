@@ -218,6 +218,8 @@ class SurveyZoom(SurveyMcBryde):
     FIGSIZE=(8,5)
 
     def __init__(self, rect=None, *args, **kwargs):
+        defaults = dict(gridlines=False)
+        setdefaults(kwargs,defaults)
         super(SurveyZoom,self).__init__(*args, **kwargs)
         self.create_axes(rect)
 
@@ -231,19 +233,10 @@ class SurveyZoom(SurveyMcBryde):
     def draw_parallels(*args, **kwargs): return
     def draw_meridians(*args, **kwargs): return
 
-    def set_axes_limits(self, ax=None):
-        if ax is None: ax = plt.gca()
-
-        x,y = self(*self.FRAME)
-        ax.set_xlim(min(x),max(x))
-        ax.set_ylim(min(y),max(y))
-        ax.grid(True,linestyle=':',color='k',lw=0.5)
-
-        # Fix the aspect ratio for full-sky projections
-        if self.fix_aspect:
-            ax.set_aspect('equal',anchor=self.anchor)
-        else:
-            ax.set_aspect('auto',anchor=self.anchor)
+    def set_axes_limits(self):
+        extent = [min(self.FRAME[0]),max(self.FRAME[0]),
+                  min(self.FRAME[1]),max(self.FRAME[1])]
+        self.ax.set_extent(extent)
 
         return ax.get_xlim(),ax.get_ylim()
 
@@ -257,17 +250,13 @@ class SurveyZoom(SurveyMcBryde):
         Much of this taken from the examples here:
         http://matplotlib.org/mpl_toolkits/axes_grid/users/axisartist.html
         """
-
         # from curved coordinate to rectlinear coordinate.
         def tr(x, y):
-            x, y = np.asarray(x), np.asarray(y)
             return self(x,y)
 
         # from rectlinear coordinate to curved coordinate.
         def inv_tr(x,y):
-            x, y = np.asarray(x), np.asarray(y)
             return self(x,y,inverse=True)
-
 
         # Cycle the coordinates
         extreme_finder = angle_helper.ExtremeFinderCycle(20, 20)
@@ -312,9 +301,10 @@ class SurveyZoom(SurveyMcBryde):
 
         ax.set_xlabel("Right Ascension")
         ax.set_ylabel("Declination")
-        #self.set_axes_limits()
-
         self.axisartist = ax
+
+        self.set_axes_limits()
+
         return fig,ax
 
 class DESSkymapMcBryde(SurveyZoom):
