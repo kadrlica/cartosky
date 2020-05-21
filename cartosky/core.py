@@ -40,6 +40,9 @@ class Skymap(object):
         do_grid      = kwargs.pop('gridlines',True)
         do_celestial = kwargs.pop('celestial',False) #noop
 
+        self.set_observer(kwargs.pop('observer',None))
+        self.set_date(kwargs.pop('date',None))
+
         # Eventually want to subclass GeoAxes
         ax = plt.gca()
         fig = ax.figure
@@ -52,7 +55,9 @@ class Skymap(object):
         if do_global:
             self.ax.set_global()
         if do_grid:
-            self.grid = self.ax.gridlines(linestyle=':')
+            self.grid = self.ax.gridlines()
+            self.grid.rotate_labels = False
+
 
         # Better grid lines?
         #https://github.com/SciTools/cartopy/pull/1117
@@ -70,6 +75,17 @@ class Skymap(object):
     def proj(self,lon,lat):
         """ Remove points outside of projection """
         return self(lon,lat)
+
+    def set_observer(self, observer):
+        observer = observer.copy() if observer else ephem.Observer()
+        self.observer = observer
+
+    def set_date(self,date):
+        date = ephem.Date(date) if date else ephem.now()
+        self.observer.date = date
+
+
+    # Wrap mpl.axes plotting functions through cartosky.skyaxes.SkyAxes
 
     def plot(self, *args, **kwargs):
         self.ax.plot(*args, **kwargs)
