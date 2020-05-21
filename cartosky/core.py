@@ -20,7 +20,7 @@ import healpy as hp
 import scipy.ndimage as nd
 
 import cartopy.crs as ccrs
-from shapely.geometry.polygon import Polygon
+from shapely.geometry.polygon import Polygon, LineString
 
 from cartosky.utils import setdefaults,get_datadir
 from cartosky.utils import cel2gal, gal2cel
@@ -319,10 +319,11 @@ class Skymap(object):
         return line
 
     def draw_line_radec(self,ra,dec,**kwargs):
-        defaults=dict(crs=ccrs.Geodetic(),facecolor='none')
+        color=kwargs.pop('c',kwargs.pop('color','k'))
+        defaults=dict(crs=ccrs.Geodetic(),edgecolor=color,facecolor='none')
         setdefaults(kwargs,defaults)
         line = LineString(list(zip(ra,dec))[::-1])
-        self.ax.add_geometries([line],crs=ccrs.Geodetic(), facecolor='none',edgecolor='k')
+        self.ax.add_geometries([line],**kwargs)
         return line
 
     def draw_polygon_radec(self,ra,dec,**kwargs):
@@ -423,7 +424,7 @@ class Skymap(object):
 
     def draw_milky_way(self,width=10,**kwargs):
         """ Draw the Milky Way galaxy. """
-        defaults = dict(color='k',lw=1.5,ls='-')
+        defaults = dict(lw=1.5,ls='-')
         setdefaults(kwargs,defaults)
 
         glon = np.linspace(0,360,500)
