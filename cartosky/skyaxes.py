@@ -6,9 +6,12 @@ __author__ = "Alex Drlica-Wagner"
 
 import functools
 import matplotlib.ticker as mticker
+import numpy as np
 
 import cartopy.crs as ccrs
 from cartopy.mpl.geoaxes import GeoAxes
+from shapely.geometry.polygon import Polygon
+from shapely.geometry.point import Point
 
 from cartosky.utils import setdefaults
 
@@ -95,8 +98,56 @@ _default_gridlines = _wrapper_decorator(default_gridlines)
 class SkyAxes(GeoAxes):
     """ Subclass cartopy.GeoAxes """
 
-    # Change gridlines default to ls=':'
+    def tissot(self, ra, dec, radius=1.0, **kwargs):
+        """
+        Add Tissot's indicatrix to the axes.
+        https://en.wikipedia.org/wiki/Tissot%27s_indicatrix
 
+        Parameters
+        ----------
+        ra    : right asencion of circle center (deg)
+        dec   : declination of circle center (deg)
+        radius: angular radius (deg)
+        ``**kwargs`` are passed to `SkyAxes.add_geometries`.
+
+        Returns
+        -------
+        feat  : feature artist
+        """
+        ra  = np.asarray(ra).flatten()
+        dec = np.asarray(dec).flatten()
+
+        if ra.shape != dec.shape:
+            msg = "ra and dec must have the same shape."
+            raise ValueError(msg)
+
+        geoms = []
+        for x, y in zip(ra, dec):
+            circle = Point(x,y).buffer(radius)
+            geoms.append(Polygon(circle.exterior.coords[::-1]))
+
+        globe = self.projection.globe
+        return self.add_geometries(geoms, ccrs.Geodetic(globe), **kwargs)
+
+    def tissot_indicatrices(self, radius=5.0, num=6, **kwargs):
+        """
+        Add Tissot's indicatrices to the axes.
+        https://en.wikipedia.org/wiki/Tissot%27s_indicatrix
+
+        Parameters
+        ----------
+        radius : angular radius of circles (deg)
+        ``**kwargs`` are passed to `Skymap.tissot`.
+
+        Returns
+        -------
+        feat : feature artist
+        """
+        ra = np.linspace(-180, 180, num, endpoint=False)
+        dec = np.linspace(-80, 80, num)
+        return self.tissot(*np.meshgrid(ra,dec),radius=radius,**kwargs)
+
+    # Change gridlines default to ls=':'
     gridlines = _default_gridlines(
         GeoAxes.gridlines
     )
