@@ -45,7 +45,7 @@ class SurveySkymap(Skymap):
     """
     def draw_maglites(self,**kwargs):
         """Draw the MagLiteS footprint"""
-        defaults=dict(color='blue', lw=2)
+        defaults=dict(edgecolor='blue', lw=2)
         setdefaults(kwargs,defaults)
 
         filename = os.path.join(get_datadir(),'maglites-poly.txt')
@@ -53,24 +53,22 @@ class SurveySkymap(Skymap):
 
     def draw_bliss(self,**kwargs):
         """Draw the BLISS footprint"""
-        defaults=dict(color='magenta', lw=2)
+        defaults=dict(edgecolor='magenta', lw=2)
         setdefaults(kwargs,defaults)
 
         filename = os.path.join(get_datadir(),'bliss-poly.txt')
         self.draw_polygons(filename,**kwargs)
 
-        #data = np.genfromtxt(filename,names=['ra','dec','poly'])
-        #for p in np.unique(data['poly']):
-        #    poly = data[data['poly'] == p]
-        #    self.draw_polygon_radec(poly['ra'],poly['dec'],**kwargs)
-
     def draw_des(self,**kwargs):
         """ Draw the DES footprint. """
+        defaults=dict(edgecolor='red', lw=2)
+        setdefaults(kwargs,defaults)
+
         return self.draw_des17(**kwargs)
 
     def draw_des13(self,**kwargs):
         """ Draw the DES footprint. """
-        defaults=dict(color='red', lw=2)
+        defaults=dict(edgecolor='red', lw=2)
         setdefaults(kwargs,defaults)
 
         filename = os.path.join(get_datadir(),'des-round13-poly.txt')
@@ -78,7 +76,7 @@ class SurveySkymap(Skymap):
 
     def draw_des17(self,**kwargs):
         """ Draw the DES footprint. """
-        defaults=dict(color='blue', lw=2)
+        defaults=dict(edgecolor='red', lw=2)
         setdefaults(kwargs,defaults)
 
         filename = os.path.join(get_datadir(),'des-round17-poly.txt')
@@ -87,9 +85,10 @@ class SurveySkymap(Skymap):
     def draw_des_sn(self,**kwargs):
         defaults = dict(facecolor='none',edgecolor='k',lw=1,zorder=10)
         setdefaults(kwargs,defaults)
-        for v in DES_SN.values():
-            # This does the projection correctly, but fails at boundary
-            self.tissot(v['ra'],v['dec'],DECAM,100,**kwargs)
+
+        ra  = [v['ra'] for v in DES_SN.values()]
+        dec = [v['dec'] for v in DES_SN.values()]
+        self.tissot(ra,dec,DECAM,**kwargs)
 
     def draw_smash(self,**kwargs):
         """ Draw the SMASH fields. """
@@ -98,8 +97,7 @@ class SurveySkymap(Skymap):
 
         filename = os.path.join(get_datadir(),'smash_fields_final.txt')
         smash=np.genfromtxt(filename,dtype=[('ra',float),('dec',float)],usecols=[4,5])
-        xy = self.proj(smash['ra'],smash['dec'])
-        self.scatter(*xy,**kwargs)
+        self.tissot(smash['ra'],smash['dec'],DECAM,**kwargs)
 
     def draw_decals(self,**kwargs):
         defaults=dict(color='red', lw=2)
@@ -128,12 +126,8 @@ class SurveySkymap(Skymap):
         datadir = '/home/s1/kadrlica/projects/bliss/v0/data/'
         datadir = '/Users/kadrlica/bliss/observing/data/'
         ra_lo,dec_lo=np.genfromtxt(datadir+'p9_lo.txt',usecols=(0,1)).T
-        ra_lo,dec_lo = self.roll(ra_lo,dec_lo)
-        ra_lo += -360*(ra_lo > 180)
         ra_lo,dec_lo = ra_lo[::-1],dec_lo[::-1]
         ra_hi,dec_hi=np.genfromtxt(datadir+'p9_hi.txt',usecols=(0,1)).T
-        ra_hi,dec_hi = self.roll(ra_hi,dec_hi)
-        ra_hi += -360*(ra_hi > 180)
         ra_hi,dec_hi = ra_hi[::-1],dec_hi[::-1]
 
         spl_lo = UnivariateSpline(ra_lo,dec_lo)
@@ -144,21 +138,19 @@ class SurveySkymap(Skymap):
         ra_hi_smooth = np.linspace(ra_hi[0],ra_hi[-1],360)
         dec_hi_smooth = spl_hi(ra_hi_smooth)
 
-        #self.plot(ra_lo,dec_lo,latlon=True,**kwargs)
-        #self.plot(ra_hi,dec_hi,latlon=True,**kwargs)
-        self.plot(ra_lo_smooth,dec_lo_smooth,latlon=True,**kwargs)
-        self.plot(ra_hi_smooth,dec_hi_smooth,latlon=True,**kwargs)
+        self.plot(ra_lo_smooth,dec_lo_smooth,**kwargs)
+        self.plot(ra_hi_smooth,dec_hi_smooth,**kwargs)
 
         orb = pd.read_csv(datadir+'P9_orbit_Cassini.csv').to_records(index=False)[::7]
         kwargs = dict(marker='o',s=40,edgecolor='none',cmap='jet_r')
-        self.scatter(*self.proj(orb['ra'],orb['dec']),c=orb['cassini'],**kwargs)
+        self.scatter(orb['ra'],orb['dec'],c=orb['cassini'],**kwargs)
 
     def draw_ligo(self,filename=None, log=True,**kwargs):
         import healpy as hp
         from astropy.io import fits as pyfits
         if not filename:
             datadir = '/home/s1/kadrlica/projects/bliss/v0/data/'
-            datadir = '/Users/kadrlica/bliss/observing/data'
+            datadir = '/Users/kadrlica/bliss/observing/data/'
             filename = datadir + 'obsbias_heatmap_semesterA.fits'
         hpxmap = pyfits.open(filename)[0].data
         if log: self.draw_hpxmap(np.log10(hpxmap))

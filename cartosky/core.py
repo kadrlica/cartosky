@@ -197,109 +197,6 @@ class Skymap(object):
 
         return hpxmap,self.draw_hpxmap(hpxmap,**kwargs)
 
-
-    def tissot(self, lons=None, lats=None, rad_deg=1.0, n_samples=80, **kwargs):
-        """
-        Add Tissot's indicatrices to the axes.
-        Parameters
-        ----------
-        lons
-            A numpy.ndarray, list or tuple of longitude values that
-            locate the centre of each circle. Specifying more than one
-            dimension allows individual points to be drawn whereas a
-            1D array produces a grid of points.
-        lats
-            A numpy.ndarray, list or tuple of latitude values that
-            that locate the centre of each circle. See lons.
-        rad_deg
-            The radius in deg of the the circles to be drawn.
-        n_samples
-            Integer number of points sampled around the circumference of
-            each circle.
-        ``**kwargs`` are passed through to `class:ShapelyFeature`.
-        """
-        # This will need to be re-implemented...
-        # cartosky.GeoAxes.tissot makes some assumptions about Geodesic radius...
-        msg = "cartosky.GeoAxes.tissot needs to be re-implemented"
-        #raise Exception(msg)
-        warnings.warn(msg)
-
-    @staticmethod
-    def wrap_index(lon, lat, wrap=180.):
-        """ DEPRECATED: Find the index where the array wraps.
-        """
-        # No wrap: ignore
-        if wrap is None:  return None
-
-        lon = np.atleast_1d(lon)
-        lat = np.atleast_1d(lat)
-
-        # No array: ignore
-        if len(lon)==1 or len(lat)==1: return None
-
-        # Map [0,360)
-        lon = np.mod(lon,360)
-        wrap = np.mod(wrap,360)
-
-        # Find the index of the entry closest to the wrap angle
-        idx = np.abs(lon - wrap).argmin()
-        # First or last index: ignore
-        if idx == 0 or idx+1 == len(lon): return None
-        # Value exactly equals wrap, choose next value
-        elif (lon[idx] == wrap): idx += 1
-        # Wrap angle sandwiched
-        elif (lon[idx]<wrap) and (lon[idx+1]>wrap): idx += 1
-        elif (lon[idx]<wrap) and (lon[idx-1]>wrap): idx += 0
-        elif (lon[idx]>wrap) and (lon[idx+1]<wrap): idx += 1
-        elif (lon[idx]>wrap) and (lon[idx-1]<wrap): idx += 0
-        # There is no wrap: ignore
-        else: return None
-
-        return idx
-
-    @classmethod
-    def roll(cls,lon,lat,wrap=180.):
-        """ DEPRECATED: Roll an lon,lat combination to split 180 boundary
-
-        Parameters:
-        -----------
-        lon : right ascension (deg)
-        lat: declination (deg)
-        wrap_angle : angle to wrap at (deg)
-        """
-        lon = np.atleast_1d(lon)
-        lat = np.atleast_1d(lat)
-
-        # Do nothing
-        if wrap is None: return lon,lat
-        if len(lon)==1 or len(lat)==1: return lon,lat
-
-        idx = cls.wrap_index(lon,lat,wrap)
-        if idx is None: return lon, lat
-
-        return np.roll(lon,-idx), np.roll(lat,-idx)
-
-    @classmethod
-    def split(cls,lon,lat,wrap=180.):
-        """ Split an lon,lat combination into lists across a wrap boundary
-        Parameters:
-        -----------
-        lon : right ascension (deg)
-        lat: declination (deg)
-        wrap_angle : angle to wrap at (deg)
-        """
-        lon = np.atleast_1d(lon)
-        lat = np.atleast_1d(lat)
-
-        # Do nothing
-        if wrap is None: return [lon],[lat]
-        if len(lon)==1 or len(lat)==1: return [lon],[lat]
-
-        idx = cls.wrap_index(lon,lat,wrap)
-        if idx is None: return [lon], [lat]
-
-        return np.split(lon,[idx]), np.split(lat,[idx])
-
     def draw_line_radec(self,ra,dec,**kwargs):
         """Draw a line assuming a Geodetic transform.
 
@@ -311,20 +208,16 @@ class Skymap(object):
 
         Returns
         -------
-        line  : line
+        feat  : cartopy.FeatureArtist
         """
-        defaults=dict(transform=ccrs.Geodetic(),ls='-')
-        setdefaults(kwargs,defaults)
-        line = self.ax.plot(ra,dec,**kwargs)
-        return line
-
-    def draw_line_radec(self,ra,dec,**kwargs):
+        # Color will fill a polygon...
+        # https://github.com/SciTools/cartopy/issues/856
         color=kwargs.pop('c',kwargs.pop('color','k'))
         defaults=dict(crs=ccrs.Geodetic(),edgecolor=color,facecolor='none')
         setdefaults(kwargs,defaults)
+
         line = LineString(list(zip(ra,dec))[::-1])
-        self.ax.add_geometries([line],**kwargs)
-        return line
+        return self.ax.add_geometries([line],**kwargs)
 
     def draw_polygon_radec(self,ra,dec,**kwargs):
         """Draw a shapely Polygon from a list of ra,dec coordinates.
@@ -341,11 +234,14 @@ class Skymap(object):
         """
         defaults=dict(crs=ccrs.Geodetic(), facecolor='none', edgecolor='red')
         setdefaults(kwargs,defaults)
-        poly = Polygon([(ra[i], dec[i]) for i in range(len(ra))][::-1])
+        ra = np.asarray(ra).flatten()
+        dec = np.asarray(dec).flatten()
+        coords = np.vstack([ra,dec]).T
+        poly = Polygon(coords)
         self.ax.add_geometries([poly], **kwargs)
         return poly
 
-    def draw_polygon(self,filename,**kwargs):
+    def draw_polygon(self,filename,reverse=True,**kwargs):
         """Draw a text file containing ra,dec coordinates of polygon(s)
 
         Parameters
@@ -367,14 +263,22 @@ class Skymap(object):
         ret = []
         for p in np.unique(data['poly']):
             poly = data[data['poly'] == p]
-            xy = self.draw_polygon_radec(poly['ra'],poly['dec'],**kwargs)
-            ret += [xy]
+            ra  = poly['ra'][::-1] if reverse else poly['ra']
+            dec = poly['dec'][::-1] if reverse else poly['dec']
+            feat = self.draw_polygon_radec(ra,dec,**kwargs)
+            ret += [feat]
             kwargs.pop('label',None)
 
         return ret
 
     # Alias for draw
     draw_polygons = draw_polygon
+
+    def tissot(self, *args, **kwargs):
+        self.ax.tissot(*args,**kwargs)
+
+    def tissot_indicatrices(self, *args, **kwargs):
+        self.ax.tissot_indicatrices(*args,**kwargs)
 
     def draw_zenith(self, radius=1.0, **kwargs):
         """
