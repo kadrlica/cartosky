@@ -14,6 +14,7 @@ from shapely.geometry.polygon import Polygon
 from shapely.geometry.point import Point
 
 from cartosky.utils import setdefaults
+from cartosky import healpix
 
 def default_transform(self, func, *args, transform=None, **kwargs):
     """
@@ -207,3 +208,76 @@ class SkyAxes(GeoAxes):
         GeoAxes.set_yticks
     )
 
+    def hpxmap(self, hpxmap, pixel=None, nside=None, xsize=800,
+                    lonra=None, latra=None, badval=healpix.UNSEEN, smooth=None,
+                    **kwargs):
+        """ Draw a healpix map with pcolormesh.
+
+        Parameters
+        ----------
+        hpxmap: input healpix or HealSparse map
+        pixel:  explicit pixel indices in RING scheme (required for partial healpix maps)
+        nside:  explicit nside of the map (required for partial healpix maps) if
+                passed while visualizing a HealSparse map it will doegrade the map to this nside.
+        xsize:  resolution of the output image
+        lonra:  longitude range [-180,180] (deg)
+        latra:  latitude range [-90,90] (deg)
+        badval: set of values considered "bad"
+        smooth: gaussian smoothing kernel (deg)
+        kwargs: passed to pcolormesh
+
+        Returns
+        -------
+        im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
+        """
+        # ADW: probably still not the best way to do this...
+        try:
+            import healsparse as hsp
+            if isinstance(hpxmap, hsp.HealSparseMap):
+                hpxmap,pixel,nside = healpix.hsp2hpx(hpxmap)
+        except ImportError:
+            pass
+
+        healpix.check_hpxmap(hpxmap,pixel,nside)
+        hpxmap = healpix.masked_array(hpxmap,badval)
+
+        if smooth:
+            # To smooth we need the full map...
+            # It'd be good to check we aren't going to blow anything up
+            hpxmap = healpix.create_map(hpxmap,pixel,nside,badval)
+            pixel,nside = None,None
+            hpxmap = healpix.masked_array(hpxmap,badval)
+            hpxmap = healpix.smooth(hpxmap,sigma=smooth)
+
+        vmin,vmax = np.percentile(hpxmap.compressed(),[2.5,97.5])
+
+        defaults = dict(rasterized=True, vmin=vmin, vmax=vmax)
+        setdefaults(kwargs,defaults)
+
+        lon,lat,values = healpix.hpx2xy(hpxmap,pixel=pixel,nside=nside,
+                                        xsize=xsize,
+                                        lonra=lonra,latra=latra)
+
+        im = self.pcolormesh(lon,lat,values,**kwargs)
+        self._sci(im)
+        return im,lon,lat,values
+
+    def hpxbin(self, lon, lat, nside=256, **kwargs):
+        """
+        Create a healpix histogram of the counts.
+
+        Like `hexbin` from matplotlib
+
+        Parameters:
+        -----------
+        lon : input longitude (deg)
+        lat : input latitude (deg)
+        nside : heaplix nside resolution
+        kwargs : passed to SkyAxes.hpxmap
+
+        Returns:
+        --------
+        hpxmap, im : healpix map and image
+        """
+        hpxmap = healpix.hpxbin(lon,lat,nside)
+        return hpxmap, self.hpxmap(hpxmap,**kwargs)

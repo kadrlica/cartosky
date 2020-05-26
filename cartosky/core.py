@@ -21,6 +21,7 @@ import scipy.ndimage as nd
 
 import cartopy.crs as ccrs
 from shapely.geometry.polygon import Polygon, LineString
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from cartosky.utils import setdefaults,get_datadir
 from cartosky.utils import cel2gal, gal2cel
@@ -31,13 +32,13 @@ import cartosky.proj
 class Skymap(object):
     """ Base class for creating Skymap objects. """
 
-    defaults = {'global':True, 'gridlines':True, 'lon_0': 0}
+    defaults = {'global':True, 'gridlines':True, 'lon_0': 0, 'celestial': True}
 
     def __init__(self, projection='cyl', **kwargs):
         setdefaults(kwargs,self.defaults)
         do_global    = kwargs.pop('global',True)
         do_grid      = kwargs.pop('gridlines',True)
-        do_celestial = kwargs.pop('celestial',False) #noop
+        do_celestial = kwargs.pop('celestial',True)
 
         self.set_observer(kwargs.pop('observer',None))
         self.set_date(kwargs.pop('date',None))
@@ -56,7 +57,8 @@ class Skymap(object):
         if do_grid:
             self.grid = self.ax.gridlines()
             self.grid.rotate_labels = False
-
+        if do_celestial:
+            self.ax.invert_xaxis()
 
         # Better grid lines?
         #https://github.com/SciTools/cartopy/pull/1117
@@ -109,11 +111,7 @@ class Skymap(object):
 
     def smooth(self,hpxmap,badval=hp.UNSEEN,sigma=None):
         """ Smooth a healpix map """
-        _ = healpix.check_hpxmap(hpxmap,None,None)
-        hpxmap = healpix.masked_array(hpxmap,badval)
-        hpxmap.fill_value = np.ma.median(hpxmap)
-        smooth = hp.smoothing(hpxmap,sigma=np.radians(sigma),verbose=False)
-        return np.ma.array(smooth,mask=hpxmap.mask)
+        return healpix.smooth(hpxmap,badval,sigma)
 
     def draw_hpxmap(self, hpxmap, pixel=None, nside=None, xsize=800,
                     lonra=None, latra=None, badval=hp.UNSEEN, smooth=None,
@@ -138,35 +136,8 @@ class Skymap(object):
         -------
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
-        # ADW: probably still not the best way to do this...
-        try:
-            import healsparse as hsp
-            if isinstance(hpxmap, hsp.HealSparseMap):
-                hpxmap,pixel,nside = healpix.hsp2hpx(hpxmap)
-        except ImportError:
-            pass
-
-        healpix.check_hpxmap(hpxmap,pixel,nside)
-        hpxmap = healpix.masked_array(hpxmap,badval)
-
-        if smooth:
-            # To smooth we need the full map
-            hpxmap = healpix.create_map(hpxmap,pixel,nside,badval)
-            pixel,nside = None,None
-            hpxmap = healpix.masked_array(hpxmap,badval)
-            hpxmap = self.smooth(hpxmap,sigma=smooth)
-
-        vmin,vmax = np.percentile(hpxmap.compressed(),[2.5,97.5])
-
-        defaults = dict(rasterized=True, vmin=vmin, vmax=vmax)
-        setdefaults(kwargs,defaults)
-
-        lon,lat,values = healpix.hpx2xy(hpxmap,pixel=pixel,nside=nside,
-                                        xsize=xsize,
-                                        lonra=lonra,latra=latra)
-
-        im = self.ax.pcolormesh(lon,lat,values,**kwargs)
-        return im,lon,lat,values
+        return self.ax.hpxmap(hpxmap, pixel, nside, xsize,
+                    lonra, latra, badval, smooth, **kwargs)
 
     def draw_hpxbin(self, lon, lat, nside=256, **kwargs):
         """
@@ -185,17 +156,7 @@ class Skymap(object):
         --------
         hpxmap, im : healpix map and image
         """
-        try:
-            pix = hp.ang2pix(nside,lon,lat,lonlat=True)
-        except TypeError:
-            pix = hp.ang2pix(nside,np.radians(90-lat),np.radians(lon))
-
-        npix = hp.nside2npix(nside)
-        hpxmap = hp.UNSEEN*np.ones(npix)
-        idx,cts = np.unique(pix,return_counts=True)
-        hpxmap[idx] = cts
-
-        return hpxmap,self.draw_hpxmap(hpxmap,**kwargs)
+        return self.ax.hpxbin(lon,lat,nside,**kwargs)
 
     def draw_line_radec(self,ra,dec,**kwargs):
         """Draw a line assuming a Geodetic transform.
