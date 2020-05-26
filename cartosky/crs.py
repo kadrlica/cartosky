@@ -16,7 +16,8 @@ __all__ = [
 
 # Default radius of the Globe.
 # Eventually should be possible to use the unit sphere.
-RADIUS=1.0e6
+#RADIUS=1.0e6
+RADIUS=6378137.0 # meters
 
 class SkySphere(Globe):
     """
@@ -61,7 +62,7 @@ class Aitoff(_WarpedRectangularProjection):
 
     @property
     def threshold(self):  # how finely to interpolate line data, etc.
-        return 1e5
+        return 1e4
 
 class Hammer(_WarpedRectangularProjection):
     """
@@ -99,7 +100,7 @@ class Hammer(_WarpedRectangularProjection):
     def threshold(self):  # how finely to interpolate line data, etc.
         """
         """
-        return 1e5
+        return 1e4
 
 
 class McBrydeThomasFlatPolarQuartic(_WarpedRectangularProjection):
@@ -138,7 +139,7 @@ class McBrydeThomasFlatPolarQuartic(_WarpedRectangularProjection):
     def threshold(self):  # how finely to interpolate line data, etc.
         """
         """
-        return 1e5
+        return 1e4
 
 class KavrayskiyVII(_WarpedRectangularProjection):
     """
