@@ -10,6 +10,8 @@ import pandas as pd
 import warnings
 warnings.simplefilter("always")
 
+UNSEEN = hp.UNSEEN
+
 def masked_array(array,badval=hp.UNSEEN):
     if isinstance(array,np.ma.MaskedArray):
         return array
@@ -133,6 +135,48 @@ def hpx2xy(hpxmap, pixel=None, nside=None, xsize=800, aspect=1.0,
         values = np.ma.array(values,mask=mask)
 
     return lon,lat,values
+
+def smooth(hpxmap,badval=hp.UNSEEN,sigma=None):
+    """ Smooth a healpix map
+
+    Parameters
+    ----------
+    hpxmap : full healpix map
+    badval : bad value for masking
+    sigma  : smoothing kernel (deg)
+
+    Returns
+    -------
+    smooth : smoothed map
+    """
+    check_hpxmap(hpxmap,None,None)
+    hpxmap = masked_array(hpxmap,badval)
+    hpxmap.fill_value = np.ma.median(hpxmap)
+    smooth = hp.smoothing(hpxmap,sigma=np.radians(sigma),verbose=False)
+    return np.ma.array(smooth,mask=hpxmap.mask)
+
+def hpxbin(lon, lat, nside=256):
+    """
+    Create a healpix histogram of the counts.
+
+    Parameters:
+    -----------
+    lon   : input longitude (deg)
+    lat   : input latitude (deg)
+    nside : healpix nside resolution
+
+    Returns:
+    --------
+    hpxmap : healpix map of counts
+    """
+    pix = hp.ang2pix(nside,lon,lat,lonlat=True)
+    npix = hp.nside2npix(nside)
+    hpxmap = hp.UNSEEN*np.ones(npix)
+    idx,cts = np.unique(pix,return_counts=True)
+    hpxmap[idx] = cts
+
+    return hpxmap
+
 
 def pd_index_pix_in_pixels(pix,pixels):
     pixel_df = pd.DataFrame({'pix':pixel,'idx':np.arange(len(pixel))})
