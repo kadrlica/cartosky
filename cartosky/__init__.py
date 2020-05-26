@@ -11,7 +11,8 @@ del get_versions
 
 from cartosky.core import Skymap, McBrydeSkymap, OrthoSkymap
 from cartosky.survey import SurveySkymap,SurveyMcBryde,SurveyOrtho
-from cartosky.survey import DESSkymap, BlissSkymap
+from cartosky.zoom import DESSkymap, BlissSkymap
+
 
 import warnings
 from matplotlib.cbook import MatplotlibDeprecationWarning
