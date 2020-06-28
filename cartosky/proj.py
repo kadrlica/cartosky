@@ -9,6 +9,7 @@ but removing basemap support (and making python 2 compatible)
 
 """
 __author__ = "Alex Drlica-Wagner"
+import warnings
 
 from . import crs as pcrs
 from .utils import setdefaults
