@@ -36,6 +36,8 @@ jobs:
         conda info -a
         conda create -q -n env python=${{ matrix.python-version }} astropy cartopy ephem healpy pandas flake8 -c conda-forge
         source activate env
+        conda list 
+        which flake8
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -44,7 +46,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest
+        pytest tests/test_skymap.py
 
 #        wget --quiet http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
 #        bash miniconda.sh -b -p $HOME/miniconda
