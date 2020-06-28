@@ -201,7 +201,7 @@ def np_index_pix_in_pixels(pix,pixels):
     return index
 
 def index_lonlat_in_pixels(lon,lat,pixels,nside):
-    pix = ang2pix(nside,lon,lat)
+    pix = hp.ang2pix(nside,lon,lat)
     return index_pix_in_pixels(pix,pixels)
 
 def ang2disc(nside, lon, lat, radius, inclusive=False, fact=4, nest=False):
