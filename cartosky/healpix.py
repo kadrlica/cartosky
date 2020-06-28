@@ -179,7 +179,7 @@ def hpxbin(lon, lat, nside=256):
 
 
 def pd_index_pix_in_pixels(pix,pixels):
-    pixel_df = pd.DataFrame({'pix':pixel,'idx':np.arange(len(pixel))})
+    pixel_df = pd.DataFrame({'pix':pixels,'idx':np.arange(len(pixels))})
     # Pandas warns about type comparison (probably doesn't like `pix.flat`)...
     pix_df = pd.DataFrame({'pix':pix.flat},dtype=int)
     idx = pix_df.merge(pixel_df,on='pix',how='left')['idx'].values
