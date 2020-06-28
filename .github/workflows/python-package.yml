@@ -30,8 +30,7 @@ jobs:
     #    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install dependencies
       run: |
-        #export PATH="/usr/share/miniconda/bin:$PATH"
-        echo ::add-path::$CONDA/bin
+        export PATH="$CONDA/bin:$PATH"
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
         conda info -a
@@ -40,13 +39,12 @@ jobs:
         pip install .[full]
     - name: Lint with flake8
       run: |
-        #export PATH="/usr/share/miniconda/bin:$PATH"
-        echo ::add-path::$CONDA/bin
+        export PATH="$CONDA/bin:$PATH"
         source activate env
         flake8
     - name: Test with pytest
       run: |
-        echo ::add-path::$CONDA/bin
+        export PATH="$CONDA/bin:$PATH"
         source activate env
         pytest tests/test_skymap.py
 
