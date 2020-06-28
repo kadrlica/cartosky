@@ -5,4 +5,5 @@ matplotlib>=2
 astropy
 healpy>1.10.2
 ephem
+proj>=4.9.0
 cartopy>=0.18.0
