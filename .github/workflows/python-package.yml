@@ -31,7 +31,7 @@ jobs:
     - name: Install dependencies
       run: |
         #export PATH="/usr/share/miniconda/bin:$PATH"
-        run: echo ::add-path::$CONDA/bin
+        echo ::add-path::$CONDA/bin
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
         conda info -a
@@ -41,12 +41,12 @@ jobs:
     - name: Lint with flake8
       run: |
         #export PATH="/usr/share/miniconda/bin:$PATH"
-        run: echo ::add-path::$CONDA/bin
+        echo ::add-path::$CONDA/bin
         source activate env
         flake8
     - name: Test with pytest
       run: |
-        run: echo ::add-path::$CONDA/bin
+        echo ::add-path::$CONDA/bin
         source activate env
         pytest tests/test_skymap.py
 
