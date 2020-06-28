@@ -42,7 +42,7 @@ def create_map(hpxmap,pixel,nside,badval=hp.UNSEEN):
         raise MemoryError(msg)
     elif nside > 2**12:
         msg = "large memory usage for map with nside=%d"%nside
-        warning.warn(msg)
+        warnings.warn(msg)
 
     m = badval*np.ones(hp.nside2npix(nside),dtype=hpxmap.dtype)
     m[pixel] = hpxmap
