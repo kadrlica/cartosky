@@ -15,10 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.7]
 
     steps:
     - uses: actions/checkout@v2
+    - uses: s-weigand/setup-conda@v1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -30,14 +31,14 @@ jobs:
     #    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install dependencies
       run: |
-        wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+        wget --quiet http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
         bash miniconda.sh -b -p $HOME/miniconda
         export PATH="$HOME/miniconda/bin:$PATH"
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
         conda info -a
-        conda create -q -n env astropy cartopy ephem healpy pandas -c conda-forge
-        conda activate env
+        conda create -q -n env python=${{ matrix.python-version }} astropy cartopy ephem healpy pandas -c conda-forge
+        source activate env
         pip install flake8 pytest
     - name: Lint with flake8
       run: |
