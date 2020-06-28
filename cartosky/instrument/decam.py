@@ -67,6 +67,7 @@ class DECamFocalPlane(object):
         --------
         corners : Projected corner locations of the CCDs
         """
+        raise DeprecationWarning("DECamFocalPlane.project is deprecated.")
         corners = self.rotate(ra,dec)
 
         x,y = basemap.proj(corners[:,:,0],corners[:,:,1])

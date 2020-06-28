@@ -440,7 +440,7 @@ class Skymap(object):
         # Should make sure axis exists....
         ax = plt.gca()
         for _ra,_dec in zip(ra,dec):
-            corners = decam.project(self,_ra,_dec)
+            corners = decam.rotate(_ra,_dec)
             collection = matplotlib.collections.PolyCollection(corners,**kwargs)
             ax.add_collection(collection)
         plt.draw()

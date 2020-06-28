@@ -144,10 +144,6 @@ class TestSkymap(unittest.TestCase):
         delta = 1.0
 
         plt.figure()
-        # Use the Cassini projection (because we can)
-        #m = Skymap(projection='cass', lon_0=ra, lat_0=dec, celestial=False,
-        #           llcrnrlon=ra+2*radius,urcrnrlon=ra-2*radius,
-        #           llcrnrlat=dec-2*radius,urcrnrlat=dec+2*radius)
         m = Skymap(projection='cyl', celestial=False, gridlines=False)
         llcrnrlon,urcrnrlon = ra+2*radius, ra-2*radius
         llcrnrlat,urcrnrlat = dec-2*radius, dec+2*radius
@@ -157,17 +153,18 @@ class TestSkymap(unittest.TestCase):
         m.draw_focal_planes([ra+delta/2],[dec-delta/2],color='g')
         # Or as arrays
         m.draw_focal_planes([ra,ra-delta,ra-delta],[dec,dec+delta,dec-delta],color='r')
-        # Draw the grid lines
+
+        ## Draw the grid lines
         draw_labels = True
-        xlocs = np.linspace(ra-2*radius,ra+2*radius,5)
-        ylocs = np.linspace(dec-2*radius,dec+2*radius,5)
+        xlocs = np.linspace(llcrnrlon,urcrnrlon,5)
+        ylocs = np.linspace(llcrnrlat,urcrnrlat,5)
         m.ax.gridlines(draw_labels=draw_labels,
                        xlocs=xlocs,ylocs=ylocs,
                        linestyle=':')
-        #m.draw_parallels(np.linspace(dec-2*radius,dec+2*radius,5),
-        #                 labelstyle='+/-',labels=[1,0,0,0])
-        #m.draw_meridians(np.linspace(ra-2*radius,ra+2*radius,5),
-        #                 labelstyle='+/-',labels=[0,0,0,1])
+
+        # ADW: This doesn't work (removes y-labels)...
+        #m.ax.invert_xaxis()
+
         plt.title('DECam Focal Planes')
 
     def test_zoom_to_fit(self):
