@@ -36,16 +36,18 @@ jobs:
         conda info -a
         conda create -q -n env python=${{ matrix.python-version }} astropy cartopy ephem healpy pandas flake8 -c conda-forge
         source activate env
-        conda list 
-        which flake8
     - name: Lint with flake8
       run: |
+        export PATH="/usr/share/miniconda/bin:$PATH"
+        conda activate env
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
+        export PATH="/usr/share/miniconda/bin:$PATH"
+        conda activate env
         pytest tests/test_skymap.py
 
 #        wget --quiet http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
