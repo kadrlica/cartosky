@@ -1,0 +1,8 @@
+matplotlib>=2
+numpy>=1.16.0
+scipy
+cartopy>=0.18.0
+ephem
+healpy>1.10.2
+astropy
+pandas
