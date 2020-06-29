@@ -80,7 +80,7 @@ class TestSkymap(unittest.TestCase):
             m.draw_hpxmap(hpxmap,pix,nside,xsize=400)
             plt.title('Partial HEALPix Map (%s)'%cls.__name__)
 
-    @unittest.skipUnless(hsp_avail, "Skip over this routine if healsparse is not installed")
+    @unittest.skipUnless(hsp_avail, "Skip this routine unless healsparse is installed")
     def test_draw_healsparse(self):
         """ Test drawing a HealSparse map """
         nside_sparse=4096
@@ -128,11 +128,14 @@ class TestSkymap(unittest.TestCase):
         m.draw_hpxmap(values,pixels,nside=nside,xsize=400)
         # Draw the grid lines
         draw_labels = True
-        xlocs = np.linspace(ra-2*radius,ra+2*radius,5)
-        ylocs = np.linspace(dec-2*radius,dec+2*radius,5)
+        xlocs = np.linspace(llcrnerlon,urcrnrlon,5)
+        ylocs = np.linspace(llcrnrlat,urcrnrlat,5)
         grid = m.ax.gridlines(draw_labels=draw_labels,
                               xlocs=xlocs,ylocs=ylocs,
                               linestyle=':')
+
+        # ADW: This doesn't work (removes y-labels)...
+        #m.ax.invert_xaxis()
 
         plt.title('HEALPix Zoom (nside=%i)'%nside)
 
@@ -153,6 +156,8 @@ class TestSkymap(unittest.TestCase):
         m.draw_focal_planes([ra+delta/2],[dec-delta/2],color='g')
         # Or as arrays
         m.draw_focal_planes([ra,ra-delta,ra-delta],[dec,dec+delta,dec-delta],color='r')
+
+        m.tissot(ra,dec,1.1,ec='g',fc='none')
 
         ## Draw the grid lines
         draw_labels = True
