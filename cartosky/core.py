@@ -244,33 +244,42 @@ class Skymap(object):
     def draw_zenith(self, radius=1.0, **kwargs):
         """
         Plot a to-scale representation of the zenith.
+
+        Parameters
+        ----------
+        radius : radius of zenith circle (deg)
+        kwargs : passed to plotting routines
+
+        Returns
+        -------
+        None
         """
-        defaults = dict(color='green',alpha=0.75,lw=1.5)
+        defaults = dict(color='green',alpha=0.75,lw=1.5,)
         setdefaults(kwargs,defaults)
 
         # RA and Dec of zenith
         zra, zdec = np.degrees(self.observer.radec_of(0, '90'))
-        xy = self.proj(zra, zdec)
-
-        self.plot(*xy,marker='+',ms=10,mew=1.5, **kwargs)
+        self.plot(zra,zdec,marker='+',ms=10,mew=1.5, **kwargs)
         if radius:
-            self.tissot(zra,zdec,radius,npts=100,fc='none', **kwargs)
+            kwargs['edgecolor']=kwargs.pop('color')
+            kwargs['facecolor']='none'
+            self.tissot(zra,zdec,radius,**kwargs)
 
-    def draw_airmass(self, airmass=1.4, npts=360, **kwargs):
-        defaults = dict(color='green', lw=2)
-        setdefaults(kwargs,defaults)
+    def draw_airmass(self, airmass=1.4, **kwargs):
+        """
+        Draw circle around zenith with given airmass.
 
+        Parameters
+        ----------
+        airmass : airmass (secz) of circle to draw
+        kwargs  : passed to draw_zenith
+
+        Returns
+        -------
+        None
+        """
         altitude_radians = (0.5 * np.pi) - np.arccos(1. / airmass)
-        ra_contour = np.zeros(npts)
-        dec_contour = np.zeros(npts)
-        for ii, azimuth in enumerate(np.linspace(0., 2. * np.pi, npts)):
-            ra_radians, dec_radians = self.observer.radec_of(azimuth, '%.2f'%(np.degrees(altitude_radians)))
-            ra_contour[ii] = np.degrees(ra_radians)
-            dec_contour[ii] = np.degrees(dec_radians)
-        xy = self.proj(ra_contour, dec_contour)
-        self.plot(*xy, **kwargs)
-
-        self.draw_zenith(**kwargs)
+        self.draw_zenith(radius=np.degrees(altitude_radians))
 
     def draw_moon(self, date):
         moon = ephem.Moon()
@@ -309,19 +318,19 @@ class Skymap(object):
 
     def draw_lmc(self,**kwargs):
         from cartosky.constants import RA_LMC, DEC_LMC, RADIUS_LMC
-        defaults = dict(npts=100,fc='0.7',ec='0.5')
+        defaults = dict(fc='0.7',ec='0.5')
         setdefaults(kwargs,defaults)
         proj = self.proj(RA_LMC,DEC_LMC)
-        #self.tissot(RA_LMC,DEC_LMC,RADIUS_LMC,**kwargs)
+        self.tissot(RA_LMC,DEC_LMC,RADIUS_LMC,**kwargs)
         plt.text(proj[0],proj[1], 'LMC', weight='bold',
                  fontsize=10, ha='center', va='center', color='k')
 
     def draw_smc(self,**kwargs):
         from cartosky.constants import RA_SMC, DEC_SMC, RADIUS_SMC
-        defaults = dict(npts=100,fc='0.7',ec='0.5')
+        defaults = dict(fc='0.7',ec='0.5')
         setdefaults(kwargs,defaults)
         proj = self.proj(RA_SMC,DEC_SMC)
-        #self.tissot(RA_SMC,DEC_SMC,RADIUS_SMC,**kwargs)
+        self.tissot(RA_SMC,DEC_SMC,RADIUS_SMC,**kwargs)
         plt.text(proj[0],proj[1], 'SMC', weight='bold',
                  fontsize=8, ha='center', va='center', color='k')
 
