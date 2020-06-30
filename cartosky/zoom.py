@@ -68,7 +68,7 @@ class SurveyZoom(SurveyMcBryde):
         self.set_axes_limits()
 
         self.ax.set_frame_on(False)
-        self.axisartist.grid(True,linestyle=':',color='k',lw=0.5)
+        self.aa.grid(True,linestyle=':',color='k',lw=0.5)
 
         if do_celestial: self.invert_xaxis()
 
@@ -84,7 +84,7 @@ class SurveyZoom(SurveyMcBryde):
 
     def invert_xaxis(self):
         self.ax.invert_xaxis()
-        self.axisartist.invert_xaxis()
+        self.aa.invert_xaxis()
 
     def set_axes_limits(self):
         extent = [min(self.FRAME[0]),max(self.FRAME[0]),
@@ -92,9 +92,10 @@ class SurveyZoom(SurveyMcBryde):
 
         self.ax.set_extent(self.EXTENT)
 
-        if hasattr(self,'axisartist'):
-            self.axisartist.set_xlim(self.ax.get_xlim())
-            self.axisartist.set_ylim(self.ax.get_ylim())
+        # AxisArtist
+        if hasattr(self,'aa'):
+            self.aa.set_xlim(self.ax.get_xlim())
+            self.aa.set_ylim(self.ax.get_ylim())
 
         return self.ax.get_xlim(),self.ax.get_ylim()
 
@@ -151,9 +152,9 @@ class SurveyZoom(SurveyMcBryde):
         ax.axis['bottom'].major_ticklabels.set_visible(True)
         ax.axis['top'].major_ticklabels.set_visible(True)
 
-        ax.set_xlabel("Right Ascension")
-        ax.set_ylabel("Declination")
-        self.axisartist = ax
+        ax.axis['bottom'].label.set(text="Right Ascension",size=18)
+        ax.axis['left'].label.set(text="Declination",size=18)
+        self.aa = ax
 
         # Set the current axis back to the SkyAxes
         fig.sca(self.ax)

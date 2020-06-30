@@ -10,6 +10,7 @@ import numpy as np
 
 import cartopy.crs as ccrs
 from cartopy.mpl.geoaxes import GeoAxes
+from cartopy.geodesic import Geodesic
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.point import Point
 
@@ -70,6 +71,19 @@ def default_gridlines(self, func, *args, **kwargs):
     result = func(self, *args, **kwargs)
     return result
 
+
+def ignore_warnings(self, func, *args, **kwargs):
+    """
+    Turn off warnings for this function.
+    """
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore",UserWarning)
+        result = func(self, *args, **kwargs)
+
+    return result
+
 def _wrapper_decorator(driver):
     """
     Generate generic wrapper decorator and dynamically modify the docstring
@@ -95,11 +109,12 @@ def _wrapper_decorator(driver):
 _default_transform = _wrapper_decorator(default_transform)
 _default_crs       = _wrapper_decorator(default_crs)
 _default_gridlines = _wrapper_decorator(default_gridlines)
+_ignore_warnings   = _wrapper_decorator(ignore_warnings)
 
 class SkyAxes(GeoAxes):
     """ Subclass cartopy.GeoAxes """
 
-    def tissot(self, ra, dec, radius=1.0, **kwargs):
+    def tissot(self, ra, dec, radius=1.0, n_samples=100, **kwargs):
         """
         Add Tissot's indicatrix to the axes.
         https://en.wikipedia.org/wiki/Tissot%27s_indicatrix
@@ -109,6 +124,7 @@ class SkyAxes(GeoAxes):
         ra    : right asencion of circle center (deg)
         dec   : declination of circle center (deg)
         radius: angular radius (deg)
+        n_samples : number of samples
         ``**kwargs`` are passed to `SkyAxes.add_geometries`.
 
         Returns
@@ -122,12 +138,18 @@ class SkyAxes(GeoAxes):
             msg = "ra and dec must have the same shape."
             raise ValueError(msg)
 
+        globe = self.projection.globe
+
+        params = globe.to_proj4_params()
+        a,b = params['a'],params['b']
+        geod = Geodesic(radius=a,flattening=1 - b/a)
+        radius_m = a * np.radians(radius)
+
         geoms = []
         for x, y in zip(ra, dec):
-            circle = Point(x,y).buffer(radius)
-            geoms.append(Polygon(circle.exterior.coords[::-1]))
+            circle = geod.circle(x, y, radius_m, n_samples=n_samples)
+            geoms.append(Polygon(circle))
 
-        globe = self.projection.globe
         return self.add_geometries(geoms, ccrs.Geodetic(globe), **kwargs)
 
     def tissot_indicatrices(self, radius=5.0, num=6, **kwargs):
@@ -195,12 +217,12 @@ class SkyAxes(GeoAxes):
     tricontourf = _default_transform(
         GeoAxes.tricontourf
     )
-    get_extent = _default_crs(
+    get_extent = _ignore_warnings(
         GeoAxes.get_extent
     )
-    set_extent = _default_crs(
-        GeoAxes.set_extent
-    )
+    #set_extent = _default_crs(
+    #    GeoAxes.set_extent
+    #)
     set_xticks = _default_crs(
         GeoAxes.set_xticks
     )

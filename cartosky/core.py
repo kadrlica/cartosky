@@ -13,6 +13,7 @@ import warnings
 import matplotlib
 from matplotlib import mlab
 from matplotlib.collections import LineCollection
+import matplotlib.patches as mpatches
 import pylab as plt
 import numpy as np
 import ephem
@@ -26,7 +27,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from cartosky.utils import setdefaults,get_datadir
 from cartosky.utils import cel2gal, gal2cel
 from cartosky import healpix
-
+from cartosky.constants import COLORS
 import cartosky.proj
 
 class Skymap(object):
@@ -195,11 +196,13 @@ class Skymap(object):
         """
         defaults=dict(crs=ccrs.Geodetic(), facecolor='none', edgecolor='red')
         setdefaults(kwargs,defaults)
-        ra = np.asarray(ra).flatten()
+        ra  = np.asarray(ra).flatten()
         dec = np.asarray(dec).flatten()
         coords = np.vstack([ra,dec]).T
         poly = Polygon(coords)
         self.ax.add_geometries([poly], **kwargs)
+        if 'label' in kwargs:
+            self.ax.plot(np.nan,np.nan,color=kwargs['edgecolor'],label=kwargs['label'])
         return poly
 
     def draw_polygon(self,filename,reverse=True,**kwargs):
@@ -435,6 +438,24 @@ class Skymap(object):
         ax.set_ylim(self.llcrnry,self.urcrnry)
 
         #self.set_axes_limits(ax=ax)
+
+    def draw_fields(self,fields,**kwargs):
+        # Scatter point size is figsize dependent...
+        defaults = dict(edgecolor='none',s=15)
+        # case insensitive without changing input array
+        names = dict([(n.lower(),n) for n in fields.dtype.names])
+
+        if self.projection == 'ortho': defaults.update(s=50)
+        if 'filter' in names:
+            colors = [COLORS[b] for b in fields[names['filter']]]
+            defaults.update(c=colors)
+        elif 'band' in names:
+            colors = [COLORS[b] for b in fields[names['band']]]
+            defaults.update(c=colors)
+
+        setdefaults(kwargs,defaults)
+        ra,dec = fields[names['ra']],fields[names['dec']]
+        self.scatter(ra,dec,**kwargs)
 
     def draw_focal_planes(self, ra, dec, **kwargs):
         from cartosky.instrument.decam import DECamFocalPlane

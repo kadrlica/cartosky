@@ -3,7 +3,7 @@
 Various constants used for plotting
 """
 __author__ = "Alex Drlica-Wagner"
-
+from collections import OrderedDict as odict
 import numpy as np
 
 # Plotting DECam
@@ -22,3 +22,13 @@ RA_SMC = 13.1867
 DEC_SMC = -72.8286
 RADIUS_SMC = 2.667 # semi_major axis (deg)
 
+COLORS = odict([
+        ('none','black'),
+        ('u','blue'),
+        ('g','green'),
+        ('r','red'),
+        ('i','#EAC117'),
+        ('z','darkorchid'),
+        ('Y','black'),
+        ('VR','gray'),
+        ])
