@@ -128,7 +128,7 @@ class TestSkymap(unittest.TestCase):
         m.draw_hpxmap(values,pixels,nside=nside,xsize=400)
         # Draw the grid lines
         draw_labels = True
-        xlocs = np.linspace(llcrnerlon,urcrnrlon,5)
+        xlocs = np.linspace(llcrnrlon,urcrnrlon,5)
         ylocs = np.linspace(llcrnrlat,urcrnrlat,5)
         grid = m.ax.gridlines(draw_labels=draw_labels,
                               xlocs=xlocs,ylocs=ylocs,
