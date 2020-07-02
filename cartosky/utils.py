@@ -159,7 +159,20 @@ class SphericalRotator:
         cos_phi,sin_phi = np.cos(phi),np.sin(phi)
         cos_theta,sin_theta = np.cos(theta),np.sin(theta)
 
-        self.rotation_matrix = np.matrix([
+        ## Numpy says don't use matrix anymore
+        #self.rotation_matrix = np.matrix([
+        #    [cos_psi * cos_phi - cos_theta * sin_phi * sin_psi,
+        #     cos_psi * sin_phi + cos_theta * cos_phi * sin_psi,
+        #     sin_psi * sin_theta],
+        #    [-sin_psi * cos_phi - cos_theta * sin_phi * cos_psi,
+        #     -sin_psi * sin_phi + cos_theta * cos_phi * cos_psi,
+        #     cos_psi * sin_theta],
+        #    [sin_theta * sin_phi,
+        #     -sin_theta * cos_phi,
+        #     cos_theta]
+        #])
+
+        self.rotation_matrix = np.array([
             [cos_psi * cos_phi - cos_theta * sin_phi * sin_psi,
              cos_psi * sin_phi + cos_theta * cos_phi * sin_psi,
              sin_psi * sin_theta],
