@@ -18,7 +18,9 @@ class DECamFocalPlane(object):
 
     def __init__(self):
         # This is not safe. Use yaml instead (extra dependency)
-        self.ccd_dict = eval(''.join(open(self.filename).readlines()))
+        with open(self.filename) as f:
+            text = ''.join(f.readlines())
+        self.ccd_dict = eval(text)
 
         # These are x,y coordinates
         self.corners = np.array(list(self.ccd_dict.values()))
