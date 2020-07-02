@@ -10,7 +10,13 @@ Welcome to CartoSky's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+Tutorials
+==================
 
+* `Tutorial 1 <./tutorial1_baseclass.html>`_
+* `Tutorial 2 <./tutorial2_subclass.html>`_
+* `Tutorial 3 <./tutorial3_healpix.html>`_
+* `Tutorial 4 <./tutorial4_decam.html>`_
 
 Indices and tables
 ==================
@@ -18,3 +24,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
