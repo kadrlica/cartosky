@@ -17,6 +17,7 @@ Tutorials
 * `Tutorial 2 <./tutorial2_subclass.html>`_
 * `Tutorial 3 <./tutorial3_healpix.html>`_
 * `Tutorial 4 <./tutorial4_decam.html>`_
+* `Tutorial 5 <./tutorial5_healsparse.html>`_
 
 Indices and tables
 ==================

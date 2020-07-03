@@ -10,6 +10,8 @@ __pycache__/
 build/
 dist/
 tutorial/.ipynb_checkpoints/
+docs/_build
+docs/tutorial*.html
 
 ### Latex
 *.fls
