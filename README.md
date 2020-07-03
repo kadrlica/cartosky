@@ -1,6 +1,6 @@
 # cartosky
 
-[![Build](https://img.shields.io/travis/kadrlica/cartosky.svg)](https://travis-ci.org/kadrlica/cartosky)
+[![Build](https://github.com/kadrlica/cartosky/workflows/Python%20package/badge.svg)
 [![PyPI](https://img.shields.io/pypi/v/cartosky.svg)](https://pypi.python.org/pypi/cartosky)
 [![Release](https://img.shields.io/github/release/kadrlica/cartosky.svg)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../)
