@@ -220,9 +220,9 @@ class SkyAxes(GeoAxes):
     get_extent = _ignore_warnings(
         GeoAxes.get_extent
     )
-    #set_extent = _default_crs(
-    #    GeoAxes.set_extent
-    #)
+    set_extent = _default_crs(
+        GeoAxes.set_extent
+    )
     set_xticks = _default_crs(
         GeoAxes.set_xticks
     )
@@ -303,3 +303,46 @@ class SkyAxes(GeoAxes):
         """
         hpxmap = healpix.hpxbin(lon,lat,nside)
         return hpxmap, self.hpxmap(hpxmap,**kwargs)
+
+    def hspmap(self, hspmap, pixel=None, nside=None, xsize=800,
+                    lonra=None, latra=None, badval=healpix.UNSEEN, smooth=None,
+                    **kwargs):
+        """ Draw a healpix map with pcolormesh.
+
+        Parameters
+        ----------
+        hpxmap: input healpix or HealSparse map
+        pixel:  explicit pixel indices in RING scheme (required for partial healpix maps)
+        nside:  explicit nside of the map (required for partial healpix maps) if
+                passed while visualizing a HealSparse map it will doegrade the map to this nside.
+        xsize:  resolution of the output image
+        lonra:  longitude range [-180,180] (deg)
+        latra:  latitude range [-90,90] (deg)
+        badval: set of values considered "bad"
+        smooth: gaussian smoothing kernel (deg)
+        kwargs: passed to pcolormesh
+
+        Returns
+        -------
+        im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
+        """
+        # ADW: probably still not the best way to do this...
+        import healsparse as hsp
+        
+        if not isinstance(hspmap, hsp.HealSparseMap):
+            hspmap = hsp.HealSparseMap(hspmap)
+
+        lon,lat,values = healpix.hsp2xy(hspmap,xsize=xsize,lonra=lonra,latra=latra)
+
+        if smooth:
+            msg = "Healsparse smoothing not implemented."
+            raise Exception(msg)
+
+        vmin,vmax = np.percentile(values.compressed(),[2.5,97.5])
+
+        defaults = dict(rasterized=True, vmin=vmin, vmax=vmax)
+        setdefaults(kwargs,defaults)
+
+        im = self.pcolormesh(lon,lat,values,**kwargs)
+        self._sci(im)
+        return im,lon,lat,values

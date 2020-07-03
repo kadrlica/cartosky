@@ -66,19 +66,33 @@ def get_map_range(hpxmap, pixel=None, nside=None, wrap_angle=180):
         pixel = np.arange(len(hpxmap),dtype=int)
 
     ipring,=np.where(np.isfinite(hpxmap) & (hpxmap!=hp.UNSEEN))
-    theta,phi = hp.pix2ang(nside, pixel[ipring])
-    lon = np.mod(np.degrees(phi),360)
-    lat = 90.0-np.degrees(theta)
+    return get_pix_range(nside,pixel[ipring],wrap_angle)
+    
+def get_pix_range(nside, pixel, nest=False, wrap_angle=180):
+    """ 
+    Calculate the longitude and latitude range for a map. 
+
+    Parameters
+    ----------
+    nside : map nside
+    pixel : pixel index
+    wrap_angle : map wrapping angle (deg)
+
+    Returns
+    -------
+    [[lon_min,lon_max],[lat_min,lat_max]] : map range (deg)
+    """
+    lon,lat = hp.pix2ang(nside,pixel,nest=nest,lonlat=True)
 
     # Small offset to add to make sure we get the whole pixel
     eps = np.degrees(hp.max_pixrad(nside))
 
-    # CHECK ME
-    hi,=np.where(lon > wrap_angle)
-    lon[hi] -= 360.0
+    ## CHECK ME
+    #hi,=np.where(lon > wrap_angle)
+    #lon[hi] -= 360.0
 
-    lon_min = max(np.nanmin(lon)-eps,wrap_angle-360)
-    lon_max = min(np.nanmax(lon)+eps,wrap_angle)
+    lon_min = max(np.nanmin(lon)-eps, 0)  #,wrap_angle-360)
+    lon_max = min(np.nanmax(lon)+eps, 360)#,wrap_angle)
     lat_min = max(np.nanmin(lat)-eps,-90)
     lat_max = min(np.nanmax(lat)+eps,90)
 
@@ -135,6 +149,47 @@ def hpx2xy(hpxmap, pixel=None, nside=None, xsize=800, aspect=1.0,
         values = np.ma.array(values,mask=mask)
 
     return lon,lat,values
+
+def hsp2xy(hspmap, xsize=800, aspect=1.0, lonra=None, latra=None):
+    """ Convert a healsparse map into x,y pixels and values
+
+    Parameters
+    ----------
+    hspmap : HealSparse map
+    lonra  : longitude range (deg)
+    latra  : latitude range (deg)
+    xsize  : number of cartesian pixels
+    aspect : ratio of number of xpix/ypix
+
+    Returns
+    -------
+    lon,lat,val : longitude, latitude, and values
+    """
+
+    if lonra is None and latra is None:
+        pix, = np.where(hspmap.coverage_mask)
+        lonra,latra = get_pix_range(hspmap.nside_coverage,pix,nest=True)
+    elif (lonra is None) or (latra is None):
+        msg = "Both lonra and latra must be specified"
+        raise Exception(msg)
+
+    lon = np.linspace(lonra[0],lonra[1], xsize)
+    lat = np.linspace(latra[0],latra[1], int(aspect*xsize))
+    lon, lat = np.meshgrid(lon, lat)
+
+    # Calculate the value at the average location for pcolormesh
+    # ADW: How does this play with RA = 360 boundary?
+    llon = (lon[1:,1:]+lon[:-1,:-1])/2.
+    llat = (lat[1:,1:]+lat[:-1,:-1])/2.
+
+    values = hspmap.get_values_pos(llon,llat,lonlat=True)
+    # ADW: Not quite sure this is what we want. Need to ask Eli...
+    if hspmap.is_wide_mask_map:
+        values = values.sum(axis=-1)
+
+    mask = hspmap.get_values_pos(llon,llat,lonlat=True,valid_mask=True)
+
+    return lon,lat,np.ma.array(values,mask=~mask)
 
 def smooth(hpxmap,badval=hp.UNSEEN,sigma=None):
     """ Smooth a healpix map
@@ -210,6 +265,44 @@ def ang2disc(nside, lon, lat, radius, inclusive=False, fact=4, nest=False):
     """
     vec = hp.ang2vec(lon,lat,lonlat=True)
     return hp.query_disc(nside,vec,np.radians(radius),inclusive,fact,nest)
+
+def gal2cel(galhpx):
+    """ Convert healpix map from Galactic to equatorial coordinates """
+    npix = len(galhpx)
+    nside = hp.npix2nside(npix)
+    pix = np.arange(npix)
+
+    ra,dec = pix2ang(nside,pix)
+    glon,glat = cel2gal(ra,dec)
+
+    return galhpx[ang2pix(nside,glon,glat)]
+
+###
+# DEPRECATED: For old version of healpy...
+def pix2ang(nside, pix):
+    """
+    Return (lon, lat) in degrees instead of (theta, phi) in radians
+    """
+    theta, phi =  hp.pix2ang(nside, pix)
+    lon = phi2lon(phi)
+    lat = theta2lat(theta)
+    return lon, lat
+
+def ang2pix(nside, lon, lat, coord='GAL'):
+    """
+    Input (lon, lat) in degrees instead of (theta, phi) in radians
+    """
+    theta = np.radians(90. - lat)
+    phi = np.radians(lon)
+    return hp.ang2pix(nside, theta, phi)
+
+def phi2lon(phi): return np.degrees(phi)
+def lon2phi(lon): return np.radians(lon)
+
+def theta2lat(theta): return 90. - np.degrees(theta)
+def lat2theta(lat): return np.radians(90. - lat)
+
+###
 
 if __name__ == "__main__":
     import argparse
