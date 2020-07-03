@@ -7,7 +7,7 @@ import numpy as np
 import healpy as hp
 import pandas as pd
 
-from utils import cel2gal
+from cartosky.utils import cel2gal
 
 import warnings
 warnings.simplefilter("always")
