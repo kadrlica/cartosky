@@ -14,7 +14,7 @@ from mpl_toolkits.axisartist import Subplot
 import mpl_toolkits.axisartist as axisartist
 import  mpl_toolkits.axisartist.angle_helper as angle_helper
 
-from cartosky.utils import setdefaults,get_datadir,hpx_gal2cel
+from cartosky.utils import setdefaults
 from cartosky.core import Skymap,McBrydeSkymap,OrthoSkymap
 from cartosky.survey import SurveySkymap,SurveyMcBryde,SurveyOrtho
 

@@ -11,6 +11,9 @@ def get_datadir():
     from os.path import abspath,dirname,join
     return join(dirname(abspath(__file__)),'data')
 
+def get_datafile(filename):
+    return os.path.join(get_datadir(),filename)
+
 def setdefaults(kwargs,defaults):
     for k,v in defaults.items():
         kwargs.setdefault(k,v)
@@ -69,39 +72,6 @@ def cel2gal(ra, dec):
     glat = np.arcsin(sin_b)
     glon = (lcp - lcpml + (2. * np.pi)) % (2. * np.pi)
     return np.degrees(glon), np.degrees(glat)
-
-def phi2lon(phi): return np.degrees(phi)
-def lon2phi(lon): return np.radians(lon)
-
-def theta2lat(theta): return 90. - np.degrees(theta)
-def lat2theta(lat): return np.radians(90. - lat)
-
-def hpx_gal2cel(galhpx):
-    npix = len(galhpx)
-    nside = hp.npix2nside(npix)
-    pix = np.arange(npix)
-
-    ra,dec = pix2ang(nside,pix)
-    glon,glat = cel2gal(ra,dec)
-
-    return galhpx[ang2pix(nside,glon,glat)]
-
-def pix2ang(nside, pix):
-    """
-    Return (lon, lat) in degrees instead of (theta, phi) in radians
-    """
-    theta, phi =  hp.pix2ang(nside, pix)
-    lon = phi2lon(phi)
-    lat = theta2lat(theta)
-    return lon, lat
-
-def ang2pix(nside, lon, lat, coord='GAL'):
-    """
-    Input (lon, lat) in degrees instead of (theta, phi) in radians
-    """
-    theta = np.radians(90. - lat)
-    phi = np.radians(lon)
-    return hp.ang2pix(nside, theta, phi)
 
 def angsep(lon1,lat1,lon2,lat2):
     """
