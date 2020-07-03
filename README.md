@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/kadrlica/cartosky/workflows/Python%20package/badge.svg)](https://github.com/kadrlica/cartosky/actions?query=workflow%3A%22Python+package%22)
 [![PyPI](https://img.shields.io/pypi/v/cartosky.svg)](https://pypi.python.org/pypi/cartosky)
-[![Release](https://img.shields.io/github/v/release/kadrlica/cartosky?include_prereleases)](../../releases)
+[![Release](https://img.shields.io/github/v/tag/kadrlica/cartosky)](../../releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../)
 
 The `cartosky` package provides a astronomically oriented interface to ploting sky maps based on [`matplotlib.basemap`](http://matplotlib.org/basemap/). This package addresses several issues present in the [`healpy`](https://healpy.readthedocs.io/en/latest/) plotting routines:
