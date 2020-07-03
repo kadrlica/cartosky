@@ -33,11 +33,11 @@ import cartosky.proj
 class Skymap(object):
     """ Base class for creating Skymap objects. """
 
-    defaults = {'global':True, 'gridlines':True, 'lon_0': 0, 'celestial': True}
+    defaults = {'allsky':True, 'gridlines':True, 'lon_0': 0, 'celestial': True}
 
     def __init__(self, projection='cyl', **kwargs):
         setdefaults(kwargs,self.defaults)
-        do_global    = kwargs.pop('global',True)
+        do_allsky    = kwargs.pop('allsky',True)
         do_grid      = kwargs.pop('gridlines',True)
         do_celestial = kwargs.pop('celestial',True)
 
@@ -53,7 +53,7 @@ class Skymap(object):
         self.projection = cartosky.proj.Proj(projection, **kwargs)
         self.ax = fig.add_subplot(*subargs,projection=self.projection)
 
-        if do_global:
+        if do_allsky:
             self.ax.set_global()
         if do_grid:
             self.grid = self.ax.gridlines()
