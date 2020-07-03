@@ -302,7 +302,7 @@ def phi2lon(phi): return np.degrees(phi)
 def lon2phi(lon): return np.radians(lon)
 
 def theta2lat(theta): return 90. - np.degrees(theta)
-def lat2theta(lat): return np.radians(90. - lat)
+def lat2theta(lat):   return np.radians(90. - lat)
 
 ###
 

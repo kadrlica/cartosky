@@ -29,14 +29,14 @@ jobs:
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
         conda info -a
-        conda create -q -n env python=${{ matrix.python-version }} pandas astropy cartopy ephem healpy -c conda-forge
+        conda create -q -n env python=${{ matrix.python-version }} pandas astropy cartopy healpy ephem -c conda-forge
         source activate env
         pip install .[full]
     - name: Lint with flake8
       run: |
         export PATH="$CONDA/bin:$PATH"
         source activate env
-        pip install flake8
+        conda install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
@@ -45,5 +45,5 @@ jobs:
       run: |
         export PATH="$CONDA/bin:$PATH"
         source activate env
-        pip install pytest
+        conda install pytest jupyter -c conda-forge
         pytest
