@@ -14,6 +14,7 @@ setup(
     author='Alex Drlica-Wagner',
     author_email='kadrlica@fnal.gov',
     scripts = [],
+    setup_requires=['numpy']
     install_requires=[
         'matplotlib',
         'numpy',
