@@ -14,9 +14,10 @@ from mpl_toolkits.axisartist import Subplot
 import mpl_toolkits.axisartist as axisartist
 import  mpl_toolkits.axisartist.angle_helper as angle_helper
 
-from cartosky.utils import setdefaults,get_datadir,hpx_gal2cel
+from cartosky.utils import setdefaults,get_datadir,get_datafile
 from cartosky.core import Skymap,McBrydeSkymap,OrthoSkymap
 from cartosky.constants import DECAM
+from cartosky import healpix
 
 # Derived from telra,teldec of 10000 exposures
 DES_SN = odict([
@@ -43,45 +44,68 @@ DES_SN_LABELS = odict([
 class SurveySkymap(Skymap):
     """Extending to survey specific functions.
     """
+    # Footprint drawing
+    def draw_footprint(self,filename,**kwargs):
+        """ Draw survey footpring polygon
+
+        Parameters
+        ----------
+        filename : path to polygon file to draw
+        **kwargs : passed to draw_polygon
+
+        Returns
+        -------
+        poly    : polygon
+        """
+        defaults = dict(edgecolor='k', facecolor='none', lw=2)
+        setdefaults(kwargs,defaults)
+        self.draw_polygon(filename,**kwargs)
+
     def draw_maglites(self,**kwargs):
-        """Draw the MagLiteS footprint"""
-        defaults=dict(edgecolor='blue', lw=2)
+        """Draw the MagLiteS footprint """
+        defaults=dict(edgecolor='blue')
         setdefaults(kwargs,defaults)
 
-        filename = os.path.join(get_datadir(),'maglites-poly.txt')
-        self.draw_polygon(filename,**kwargs)
+        filename = get_datafile('maglites-poly.txt')
+        self.draw_footprint(filename, **kwargs)
 
     def draw_bliss(self,**kwargs):
         """Draw the BLISS footprint"""
-        defaults=dict(edgecolor='magenta', lw=2)
+        defaults = dict(edgecolor='magenta')
         setdefaults(kwargs,defaults)
 
-        filename = os.path.join(get_datadir(),'bliss-poly.txt')
-        self.draw_polygons(filename,**kwargs)
+        filename = get_datafile('bliss-poly.txt')
+        self.draw_footprint(filename, **kwargs)
 
     def draw_des(self,**kwargs):
         """ Draw the DES footprint. """
-        defaults=dict(edgecolor='red', lw=2)
-        setdefaults(kwargs,defaults)
-
         return self.draw_des17(**kwargs)
 
     def draw_des13(self,**kwargs):
         """ Draw the DES footprint. """
-        defaults=dict(edgecolor='red', lw=2)
+        defaults=dict(edgecolor='red')
         setdefaults(kwargs,defaults)
 
-        filename = os.path.join(get_datadir(),'des-round13-poly.txt')
-        return self.draw_polygon(filename,**kwargs)
+        filename = get_datafile('des-round13-poly.txt')
+        return self.draw_footprint(filename,**kwargs)
 
     def draw_des17(self,**kwargs):
         """ Draw the DES footprint. """
-        defaults=dict(edgecolor='red', lw=2)
+        defaults=dict(edgecolor='red')
         setdefaults(kwargs,defaults)
 
-        filename = os.path.join(get_datadir(),'des-round17-poly.txt')
-        return self.draw_polygon(filename,**kwargs)
+        filename = get_datafile('des-round17-poly.txt')
+        return self.draw_footprint(filename,**kwargs)
 
+    def draw_decals(self,**kwargs):
+        """ Draw DECaLS footprint. """
+        defaults=dict(edgecolor='blue')
+        setdefaults(kwargs,defaults)
+
+        filename = get_datafile('decals-poly.txt')
+        return self.draw_footprint(filename,**kwargs)
+
+    # Tissot drawing
     def draw_des_sn(self,**kwargs):
         defaults = dict(facecolor='none',edgecolor='k',lw=1,zorder=10)
         setdefaults(kwargs,defaults)
@@ -92,20 +116,14 @@ class SurveySkymap(Skymap):
 
     def draw_smash(self,**kwargs):
         """ Draw the SMASH fields. """
-        defaults=dict(facecolor='none',color='k')
+        defaults=dict(facecolor='none',edgecolor='k',lw=1,zorder=10)
         setdefaults(kwargs,defaults)
 
-        filename = os.path.join(get_datadir(),'smash_fields_final.txt')
+        filename = get_datafile('smash_fields_final.txt')
         smash=np.genfromtxt(filename,dtype=[('ra',float),('dec',float)],usecols=[4,5])
         self.tissot(smash['ra'],smash['dec'],DECAM,**kwargs)
 
-    def draw_decals(self,**kwargs):
-        defaults=dict(color='red', lw=2)
-        setdefaults(kwargs,defaults)
-
-        filename = os.path.join(get_datadir(),'decals-poly.txt')
-        return self.draw_polygon(filename,**kwargs)
-
+    # Map drawing (should probably be removed...)
     def draw_jethwa(self,filename=None,log=True,**kwargs):
         import healpy as hp
         if not filename:
@@ -165,7 +183,7 @@ class SurveySkymap(Skymap):
             filename = datadir+'lambda_sfd_ebv.fits'
 
         galhpx = hp.read_map(filename)
-        celhpx = hpx_gal2cel(galhpx)
+        celhpx = healpix.gal2cel(galhpx)
         return self.draw_hpxmap(np.log10(celhpx),**kwargs)
 
 class SurveyMcBryde(SurveySkymap,McBrydeSkymap): pass
