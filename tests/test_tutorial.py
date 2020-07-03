@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test ipython notebooks in skymap tutorial.
+Test notebooks in tutorial.
 
 Adapted from:
 https://blog.thedataincubator.com/2016/06/testing-jupyter-notebooks/
@@ -22,7 +22,7 @@ def _notebook_run(path):
     """
     with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
         args = ["jupyter", "nbconvert", "--to", "notebook", "--execute",
-          "--ExecutePreprocessor.timeout=60",
+          "--ExecutePreprocessor.timeout=60", "--log-level=WARN",
           "--output", fout.name, path]
         subprocess.check_call(args)
 
@@ -37,27 +37,44 @@ def _notebook_run(path):
 
 
 class TestTutorial(unittest.TestCase):
-    """ Test the tutorial ipython notebooks. """
+    """ Test the tutorial notebooks. """
 
-    def _test_chapter(self, i=1):
-        """ Test a specific chapter of the tutorial. """
-        path = glob.glob('tutorial/chapter%i_*.ipynb'%i)[0]
-        abspath = os.path.abspath(path)
-        nb, errors = _notebook_run(abspath)
+    path = './tutorial'
+    
+    def _test_notebook(self, path):
+        """ Test a notebook. 
+
+        Parameters
+        ----------
+        path : path to notebook
+
+        Returns
+        -------
+        None
+        """
+        nb, errors = _notebook_run(path)
         assert errors == []
+        
+    def _test_tutorial(self, i=1):
+        """ Test a specific tutorial of the tutorial. """
+        path = glob.glob(self.path+'/tutorial%i_*.ipynb'%i)[0]
+        abspath = os.path.abspath(path)
+        self._test_notebook(abspath)
 
-    def test_chapter1(self):
-        return self._test_chapter(1)
+    def test_tutorial1(self):
+        return self._test_tutorial(1)
 
-    def test_chapter2(self):
-        return self._test_chapter(2)
+    def test_tutorial2(self):
+        return self._test_tutorial(2)
 
-    def test_chapter3(self):
-        return self._test_chapter(3)
+    def test_tutorial3(self):
+        return self._test_tutorial(3)
 
-    def test_chapter4(self):
-        return self._test_chapter(4)
+    def test_tutorial4(self):
+        return self._test_tutorial(4)
 
+    def test_tutorial5(self):
+        return self._test_tutorial(5)
 
 
 if __name__ == "__main__":
