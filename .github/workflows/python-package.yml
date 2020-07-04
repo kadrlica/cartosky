@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -23,12 +23,14 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Before install
       run: |
         export PATH="$CONDA/bin:$PATH"
         conda config --set always_yes yes --set changeps1 no
         conda update -q conda
         conda info -a
+    - name: Install dependencies
+      run: |
         conda create -q -n env python=${{ matrix.python-version }} pandas astropy cartopy healpy ephem -c conda-forge
         source activate env
         pip install .
