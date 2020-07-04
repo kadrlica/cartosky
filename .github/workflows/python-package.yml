@@ -49,5 +49,5 @@ jobs:
       run: |
         export PATH="$CONDA/bin:$PATH"
         source activate env
-        conda install nbconvert -c conda-forge
+        conda install jupyter nbconvert -c conda-forge
         pytest
