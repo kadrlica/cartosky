@@ -179,12 +179,12 @@ def hsp2xy(hspmap, xsize=800, aspect=1.0, lonra=None, latra=None):
     lat = np.linspace(latra[0],latra[1], int(aspect*xsize))
     lon, lat = np.meshgrid(lon, lat)
 
-    # Calculate the value at the average location for pcolormesh
+    # Calculate the value at the central location for pcolormesh
     # ADW: How does this play with RA = 360 boundary?
-    llon = (lon[1:,1:]+lon[:-1,:-1])/2.
-    llat = (lat[1:,1:]+lat[:-1,:-1])/2.
+    clon = (lon[1:,1:]+lon[:-1,:-1])/2.
+    clat = (lat[1:,1:]+lat[:-1,:-1])/2.
 
-    values = hspmap.get_values_pos(llon,llat,lonlat=True)
+    values = hspmap.get_values_pos(clon,clat,lonlat=True)
     # ADW: Not quite sure this is what we want. Need to ask Eli...
     if hspmap.is_wide_mask_map:
         values = values.sum(axis=-1)
@@ -274,37 +274,10 @@ def gal2cel(galhpx):
     nside = hp.npix2nside(npix)
     pix = np.arange(npix)
 
-    ra,dec = pix2ang(nside,pix)
+    ra,dec = hp.pix2ang(nside,pix,lonlat=True)
     glon,glat = cel2gal(ra,dec)
 
-    return galhpx[ang2pix(nside,glon,glat)]
-
-###
-# DEPRECATED: For old version of healpy...
-def pix2ang(nside, pix):
-    """
-    Return (lon, lat) in degrees instead of (theta, phi) in radians
-    """
-    theta, phi =  hp.pix2ang(nside, pix)
-    lon = phi2lon(phi)
-    lat = theta2lat(theta)
-    return lon, lat
-
-def ang2pix(nside, lon, lat, coord='GAL'):
-    """
-    Input (lon, lat) in degrees instead of (theta, phi) in radians
-    """
-    theta = np.radians(90. - lat)
-    phi = np.radians(lon)
-    return hp.ang2pix(nside, theta, phi)
-
-def phi2lon(phi): return np.degrees(phi)
-def lon2phi(lon): return np.radians(lon)
-
-def theta2lat(theta): return 90. - np.degrees(theta)
-def lat2theta(lat):   return np.radians(90. - lat)
-
-###
+    return galhpx[hp.ang2pix(nside,glon,glat,lonlat=True)]
 
 if __name__ == "__main__":
     import argparse

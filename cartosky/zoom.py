@@ -3,11 +3,10 @@
 Using AxisArtist to zoom on specific surveys.
 """
 import os
+from collections import OrderedDict as odict
 
 import numpy as np
 import pylab as plt
-import pandas as pd
-from collections import OrderedDict as odict
 
 from mpl_toolkits.axisartist.grid_helper_curvelinear import GridHelperCurveLinear
 from mpl_toolkits.axisartist import Subplot

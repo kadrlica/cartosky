@@ -6,7 +6,6 @@ import os
 
 import numpy as np
 import pylab as plt
-import pandas as pd
 from collections import OrderedDict as odict
 
 from mpl_toolkits.axisartist.grid_helper_curvelinear import GridHelperCurveLinear
@@ -123,68 +122,23 @@ class SurveySkymap(Skymap):
         smash=np.genfromtxt(filename,dtype=[('ra',float),('dec',float)],usecols=[4,5])
         self.tissot(smash['ra'],smash['dec'],DECAM,**kwargs)
 
-    # Map drawing (should probably be removed...)
-    def draw_jethwa(self,filename=None,log=True,**kwargs):
+    # Map drawing
+    def draw_sfd(self,**kwargs):
         import healpy as hp
-        if not filename:
-            datadir = '/home/s1/kadrlica/projects/bliss/v0/data/'
-            datadir = '/Users/kadrlica/bliss/observing/data'
-            filename = os.path.join(datadir,'jethwa_satellites_n256.fits.gz')
-        hpxmap = hp.read_map(filename)
-        if log:
-            return self.draw_hpxmap(np.log10(hpxmap),**kwargs)
-        else:
-            return self.draw_hpxmap(hpxmap,**kwargs)
-
-    def draw_planet9(self,**kwargs):
-        from scipy.interpolate import interp1d
-        from scipy.interpolate import UnivariateSpline
-        defaults=dict(color='b',lw=3)
+        from matplotlib.colors import LogNorm
+        defaults = dict(rasterized=True,cmap=plt.cm.binary,norm=LogNorm())
         setdefaults(kwargs,defaults)
-        datadir = '/home/s1/kadrlica/projects/bliss/v0/data/'
-        datadir = '/Users/kadrlica/bliss/observing/data/'
-        ra_lo,dec_lo=np.genfromtxt(datadir+'p9_lo.txt',usecols=(0,1)).T
-        ra_lo,dec_lo = ra_lo[::-1],dec_lo[::-1]
-        ra_hi,dec_hi=np.genfromtxt(datadir+'p9_hi.txt',usecols=(0,1)).T
-        ra_hi,dec_hi = ra_hi[::-1],dec_hi[::-1]
 
-        spl_lo = UnivariateSpline(ra_lo,dec_lo)
-        ra_lo_smooth = np.linspace(ra_lo[0],ra_lo[-1],360)
-        dec_lo_smooth = spl_lo(ra_lo_smooth)
+        filename = get_datafile('lambda_sfd_ebv.fits')
+        if not os.path.exists(filename):
+            import subprocess
+            url = "https://lambda.gsfc.nasa.gov/data/foregrounds/SFD/lambda_sfd_ebv.fits"
+            print("Downloading SFD map from:\n  %s"%url)
+            subprocess.check_output(['curl',url,'--output',filename])
 
-        spl_hi = UnivariateSpline(ra_hi,dec_hi)
-        ra_hi_smooth = np.linspace(ra_hi[0],ra_hi[-1],360)
-        dec_hi_smooth = spl_hi(ra_hi_smooth)
-
-        self.plot(ra_lo_smooth,dec_lo_smooth,**kwargs)
-        self.plot(ra_hi_smooth,dec_hi_smooth,**kwargs)
-
-        orb = pd.read_csv(datadir+'P9_orbit_Cassini.csv').to_records(index=False)[::7]
-        kwargs = dict(marker='o',s=40,edgecolor='none',cmap='jet_r')
-        self.scatter(orb['ra'],orb['dec'],c=orb['cassini'],**kwargs)
-
-    def draw_ligo(self,filename=None, log=True,**kwargs):
-        import healpy as hp
-        from astropy.io import fits as pyfits
-        if not filename:
-            datadir = '/home/s1/kadrlica/projects/bliss/v0/data/'
-            datadir = '/Users/kadrlica/bliss/observing/data/'
-            filename = datadir + 'obsbias_heatmap_semesterA.fits'
-        hpxmap = pyfits.open(filename)[0].data
-        if log: self.draw_hpxmap(np.log10(hpxmap))
-        else:   self.draw_hpxmap(hpxmap)
-
-    def draw_sfd(self,filename=None,**kwargs):
-        import healpy as hp
-        defaults = dict(rasterized=True,cmap=plt.cm.binary)
-        setdefaults(kwargs,defaults)
-        if not filename:
-            datadir  = '/Users/kadrlica/bliss/observing/data/'
-            filename = datadir+'lambda_sfd_ebv.fits'
-
-        galhpx = hp.read_map(filename)
+        galhpx = hp.read_map(filename,verbose=False)
         celhpx = healpix.gal2cel(galhpx)
-        return self.draw_hpxmap(np.log10(celhpx),**kwargs)
+        return self.draw_hpxmap(celhpx,**kwargs)
 
 class SurveyMcBryde(SurveySkymap,McBrydeSkymap): pass
 class SurveyOrtho(SurveySkymap,OrthoSkymap): pass

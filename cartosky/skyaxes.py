@@ -252,14 +252,6 @@ class SkyAxes(GeoAxes):
         -------
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
-        # ADW: probably still not the best way to do this...
-        try:
-            import healsparse as hsp
-            if isinstance(hpxmap, hsp.HealSparseMap):
-                hpxmap,pixel,nside = healpix.hsp2hpx(hpxmap)
-        except ImportError:
-            pass
-
         healpix.check_hpxmap(hpxmap,pixel,nside)
         hpxmap = healpix.masked_array(hpxmap,badval)
 
@@ -328,9 +320,12 @@ class SkyAxes(GeoAxes):
         """
         # ADW: probably still not the best way to do this...
         import healsparse as hsp
-        
+        import healpy as hp
+
         if not isinstance(hspmap, hsp.HealSparseMap):
-            hspmap = hsp.HealSparseMap(hspmap)
+            # Assume that it is a healpix map in RING ordering
+            hpxmap = hp.reorder(hspmap,r2n=True)
+            hspmap = hsp.HealSparseMap(healpix_map=hpxmap,nside_coverage=nside)
 
         lon,lat,values = healpix.hsp2xy(hspmap,xsize=xsize,lonra=lonra,latra=latra)
 
