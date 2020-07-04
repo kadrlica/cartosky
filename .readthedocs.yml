@@ -11,13 +11,12 @@ sphinx:
   configuration: docs/conf.py
   fail_on_warning: false
 
-# Optionally build your docs in additional formats such as PDF
-formats:
-  - pdf
+build:
+  image: latest
 
-# Optionally set the version of Python and requirements required to build your docs
 python:
   version: 3.7
-  install:
-    - requirements: docs/requirements.txt
-    - requirements: requirements.txt
+  system_packages: true
+
+conda:
+  environment: docs/environment.yml

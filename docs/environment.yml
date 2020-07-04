@@ -1,0 +1,12 @@
+# Hard requirements for notebook examples and documentation build
+name: cartosky-dev
+channels:
+  - conda-forge
+dependencies:
+  - cartopy
+  - nbconvert
+  - pip
+  - pip:
+    - ..
+    - sphinx>=3.0
+    - sphinx_rtd_theme==0.4.3
