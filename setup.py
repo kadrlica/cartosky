@@ -6,6 +6,9 @@ import versioneer
 
 URL = 'https://github.com/kadrlica/cartosky'
 
+with open('requirements.txt') as f:
+    install_requires = [req.strip() for req in f.readlines() if req[0] != '#']
+
 setup(
     name='cartosky',
     version=versioneer.get_version(),
@@ -14,18 +17,9 @@ setup(
     author='Alex Drlica-Wagner',
     author_email='kadrlica@fnal.gov',
     scripts = [],
-    setup_requires=['numpy']
-    install_requires=[
-        'matplotlib',
-        'numpy',
-        'scipy',
-        'pandas',
-        'astropy',
-        'cartopy >= 0.18.0',
-        'healpy > 1.10.2',
-        'healsparse',
-        'ephem',
-    ],
+    python_requires='>=3.6.0',
+    setup_requires=['numpy'],
+    install_requires=install_requires,
     packages=['cartosky','cartosky.instrument'],
     package_data={'cartosky':['data/*.txt','data/*.dat']},
     description="Python tools for making skymaps",
@@ -33,7 +27,11 @@ setup(
     platforms='any',
     keywords='python astronomy plotting',
     classifiers = [
-        'Programming Language :: Python',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Development Status :: 2 - Pre-Alpha',
         'Natural Language :: English',
         'Intended Audience :: Science/Research',

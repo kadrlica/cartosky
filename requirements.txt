@@ -3,7 +3,6 @@ scipy
 pandas
 matplotlib>=2.0
 cartopy>=0.18.0
-astropy
 healpy>1.10.2
 healsparse
 ephem
