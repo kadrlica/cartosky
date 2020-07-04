@@ -185,11 +185,12 @@ def hsp2xy(hspmap, xsize=800, aspect=1.0, lonra=None, latra=None):
     clat = (lat[1:,1:]+lat[:-1,:-1])/2.
 
     values = hspmap.get_values_pos(clon,clat,lonlat=True)
-    # ADW: Not quite sure this is what we want. Need to ask Eli...
+    # ADW: Not sure how to display wide maps. Need to ask Eli...
     if hspmap.is_wide_mask_map:
+        warnings.warn("Attempting to draw wide map...")
         values = values.sum(axis=-1)
 
-    mask = hspmap.get_values_pos(llon,llat,lonlat=True,valid_mask=True)
+    mask = hspmap.get_values_pos(clon,clat,lonlat=True,valid_mask=True)
 
     return lon,lat,np.ma.array(values,mask=~mask)
 

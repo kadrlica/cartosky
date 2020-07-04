@@ -116,15 +116,13 @@ class Skymap(object):
         """ Smooth a healpix map """
         return healpix.smooth(hpxmap,badval,sigma)
 
-    def draw_hpxmap(self, hpxmap, pixel=None, nside=None, xsize=800,
-                    lonra=None, latra=None, badval=hp.UNSEEN, smooth=None,
-                    **kwargs):
+    def draw_hpxmap(self, *args, **kwargs):
         """
         Use pcolor/pcolormesh to draw healpix map.
 
         Parameters
         ----------
-        hpxmap: input healpix or HealSparse map
+        hpxmap: input healpix map
         pixel:  explicit pixel indices in RING scheme (required for partial healpix maps)
         nside:  explicit nside of the map (required for partial healpix maps) if
                 passed while visualizing a HealSparse map it will doegrade the map to this nside.
@@ -139,10 +137,9 @@ class Skymap(object):
         -------
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
-        return self.ax.hpxmap(hpxmap, pixel, nside, xsize,
-                    lonra, latra, badval, smooth, **kwargs)
+        return self.ax.hpxmap(*args,**kwargs)
 
-    def draw_hpxbin(self, lon, lat, nside=256, **kwargs):
+    def draw_hpxbin(self, *args, **kwargs):
         """
         Create a healpix histogram of the counts.
 
@@ -159,7 +156,30 @@ class Skymap(object):
         --------
         hpxmap, im : healpix map and image
         """
-        return self.ax.hpxbin(lon,lat,nside,**kwargs)
+        return self.ax.hpxbin(*args,**kwargs)
+
+    def draw_hspmap(self, *args, **kwargs):
+        """ Draw a healpix map with pcolormesh.
+
+        Parameters
+        ----------
+        hspmap: input HealSparse map
+        pixel:  explicit pixel indices in RING scheme (required for partial healpix maps)
+        nside:  explicit nside of the map (required for partial healpix maps) if
+                passed while visualizing a HealSparse map it will doegrade the map to this nside.
+        xsize:  resolution of the output image
+        lonra:  longitude range [-180,180] (deg)
+        latra:  latitude range [-90,90] (deg)
+        badval: set of values considered "bad"
+        smooth: gaussian smoothing kernel (deg)
+        kwargs: passed to pcolormesh
+
+        Returns
+        -------
+        im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
+        """
+        return self.ax.hspmap(*args,**kwargs)
+
 
     def draw_line_radec(self,ra,dec,**kwargs):
         """Draw a line assuming a Geodetic transform.

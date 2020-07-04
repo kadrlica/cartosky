@@ -81,20 +81,19 @@ class TestSkymap(unittest.TestCase):
             plt.title('Partial HEALPix Map (%s)'%cls.__name__)
 
     @unittest.skipUnless(hsp_avail, "Skip this routine unless healsparse is installed")
-    def test_draw_healsparse(self):
+    def test_draw_hspmap(self):
         """ Test drawing a HealSparse map """
         nside_sparse=4096
         nside_coverage=64
-        hsp_map = hsp.HealSparseMap.make_empty(nside_coverage, nside_sparse, dtype=np.int, sentinel=0)
+        hspmap = hsp.HealSparseMap.make_empty(nside_coverage, nside_sparse, dtype=np.int, sentinel=0)
         circ = hsp.Circle(ra=0, dec=0, radius=2.0, value=10)
-        hsp.geom.realize_geom([circ], hsp_map)
+        hsp.geom.realize_geom([circ], hspmap)
         m = cartosky.Skymap(projection='cyl')
         llcrnrlon,urcrnrlon=3.0,-3.0
         llcrnrlat,urcrnrlat=-3,3.0
         m.ax.set_extent([llcrnrlon,urcrnrlon,llcrnrlat,urcrnrlat])
-        m.draw_hpxmap(hsp_map)
+        m.draw_hspmap(hspmap)
         plt.title('HEALPix Zoom (nside=%i)'%nside_sparse)
-        m.draw_hpxmap(hsp_map, nside=1024) # Checking that the map changes resolution
 
     def test_draw_hpxbin(self):
         """ Test drawing hpxbin from points """
