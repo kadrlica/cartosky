@@ -12,6 +12,7 @@ dist/
 tutorial/.ipynb_checkpoints/
 docs/_build
 docs/tutorial*.html
+cartosky/data/lambda_sfd_ebv.fits
 
 ### Latex
 *.fls
