@@ -9,7 +9,7 @@ from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-from cartosky.core import Skymap, McBrydeSkymap, OrthoSkymap
+from cartosky.core import *
 from cartosky.survey import SurveySkymap,SurveyMcBryde,SurveyOrtho
 from cartosky.zoom import DESSkymap, BlissSkymap
 
