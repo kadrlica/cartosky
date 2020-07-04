@@ -31,8 +31,9 @@ jobs:
         conda info -a
     - name: Install dependencies
       run: |
+        export PATH="$CONDA/bin:$PATH"
         conda create -q -n env python=${{ matrix.python-version }} pandas astropy cartopy healpy ephem -c conda-forge
-        source activate env
+        conda activate env
         pip install .
     - name: Lint with flake8
       run: |
