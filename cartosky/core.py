@@ -30,6 +30,8 @@ from cartosky import healpix
 from cartosky.constants import COLORS
 import cartosky.proj
 
+__all__ = ['Skymap','McBrydeSkymap','OrthoSkymap','MollweideSkymap','AitoffSkymap','HammerSkymap']
+
 class Skymap(object):
     """ Base class for creating Skymap objects. """
 
@@ -488,3 +490,21 @@ class OrthoSkymap(Skymap):
     def __init__(self,**kwargs):
         setdefaults(kwargs,self.defaults)
         super(OrthoSkymap,self).__init__(projection='ortho', **kwargs)
+
+class MollweideSkymap(Skymap):
+    defaults = dict(Skymap.defaults)
+    def __init__(self,**kwargs):
+        setdefaults(kwargs,self.defaults)
+        super(MollweideSkymap,self).__init__(projection='moll', **kwargs)
+
+class HammerSkymap(Skymap):
+    defaults = dict(Skymap.defaults)
+    def __init__(self,**kwargs):
+        setdefaults(kwargs,self.defaults)
+        super(MollweideSkymap,self).__init__(projection='hammer', **kwargs)
+
+class AitoffSkymap(Skymap):
+    defaults = dict(Skymap.defaults)
+    def __init__(self,**kwargs):
+        setdefaults(kwargs,self.defaults)
+        super(MollweideSkymap,self).__init__(projection='aitoff', **kwargs)
