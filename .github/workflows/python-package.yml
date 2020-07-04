@@ -34,7 +34,7 @@ jobs:
       run: |
         export PATH="$CONDA/bin:$PATH"
         conda create -q -n env python=${{ matrix.python-version }} pandas astropy cartopy healpy ephem -c conda-forge
-        conda activate env
+        source activate env
         pip install .
     - name: Lint with flake8
       run: |
