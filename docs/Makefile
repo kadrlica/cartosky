@@ -19,9 +19,11 @@ help:
 
 # Build the notebooks (needs to be better make-ified)
 notebooks:
+	@echo "Converting notebooks..."
 	jupyter nbconvert --to html --execute --output-dir . ../tutorial/*.ipynb
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile notebooks
+	@echo "Running Makefile..."
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
