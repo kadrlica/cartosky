@@ -9,10 +9,10 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -21,8 +21,11 @@ project = 'cartosky'
 copyright = '2020, Alex Drlica-Wagner'
 author = 'Alex Drlica-Wagner'
 
+# The short X.Y version
+version = ''
+
 # The full version, including alpha/beta/rc tags
-release = 'v0.1'
+release = ''
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,6 +34,8 @@ release = 'v0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -55,9 +60,17 @@ html_theme = 'sphinx_rtd_theme'
 #html_static_path = ['_static']
 html_static_path = []
 
-html_extra_path = ['tutorial1_baseclass.html',
-                   'tutorial2_subclass.html',
-                   'tutorial3_healpix.html',
-                   'tutorial4_decam.html',
-                   'tutorial5_healsparse.html',
-]
+# Created by setup
+html_extra_path = []
+
+def setup(app):
+    import glob
+    import subprocess
+
+    pattern='../tutorial/*.ipynb'
+    for nb in glob.glob(pattern):
+        html = os.path.basename(nb).replace('.ipynb','.html')
+        html_extra_path.append(html)
+        if os.path.exists(html): continue
+        cmd = 'jupyter nbconvert --to html --execute --output-dir . %s'%nb
+        subprocess.check_output(cmd,shell=True)
