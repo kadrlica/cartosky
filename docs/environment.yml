@@ -4,6 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - cartopy
+  - jupyter
   - nbconvert
   - pip
   - pip:
