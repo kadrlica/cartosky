@@ -57,11 +57,11 @@ class Skymap(object):
 
         if do_allsky:
             self.ax.set_global()
+        if do_celestial:
+            self.ax.invert_xaxis()
         if do_grid:
             self.grid = self.ax.gridlines()
             self.grid.rotate_labels = False
-        if do_celestial:
-            self.ax.invert_xaxis()
 
         # Better grid lines?
         #https://github.com/SciTools/cartopy/pull/1117
