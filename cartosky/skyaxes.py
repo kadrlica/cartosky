@@ -66,7 +66,8 @@ def default_gridlines(self, func, *args, **kwargs):
     Default gridlines options.
     """
     fmt = mticker.FuncFormatter(lambda v, pos: '{:g}'.format(v))
-    defaults = dict(linestyle=':',xformatter=fmt,yformatter=fmt, draw_labels=True)
+    defaults = dict(linestyle=':', xformatter=fmt, yformatter=fmt, draw_labels=True,
+                    crs=ccrs.PlateCarree())
     setdefaults(kwargs,defaults)
     result = func(self, *args, **kwargs)
     return result
