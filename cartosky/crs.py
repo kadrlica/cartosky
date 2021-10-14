@@ -6,8 +6,11 @@ Taken from ProPlot
 """
 import warnings
 from cartopy.crs import _WarpedRectangularProjection
-from cartopy._crs import Globe
-
+from distutils.version import LooseVersion
+if Looseversion(cartosky.__version__) > LooseVersion('0.2.0'):
+    from cartopy.crs import Globe
+else:
+    from cartopy._crs import Globe
 from .utils import setdefaults
 
 __all__ = [
