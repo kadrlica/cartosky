@@ -5,9 +5,13 @@ New cartopy projection classes.
 Taken from ProPlot
 """
 import warnings
+import cartopy
 from cartopy.crs import _WarpedRectangularProjection
-from cartopy._crs import Globe
-
+from distutils.version import LooseVersion
+if LooseVersion(cartopy.__version__) >= LooseVersion('0.20.0'):
+    from cartopy.crs import Globe
+else:
+    from cartopy._crs import Globe
 from .utils import setdefaults
 
 __all__ = [
