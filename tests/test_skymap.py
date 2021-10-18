@@ -86,7 +86,7 @@ class TestSkymap(unittest.TestCase):
         """ Test drawing a HealSparse map """
         nside_sparse = 4096
         nside_coverage = 64
-        hspmap = hsp.HealSparseMap.make_empty(nside_coverage, nside_sparse, dtype=np.int, sentinel=0)
+        hspmap = hsp.HealSparseMap.make_empty(nside_coverage, nside_sparse, dtype=np.int64, sentinel=0)
         circ = hsp.Circle(ra=0, dec=0, radius=2.0, value=10)
         hsp.geom.realize_geom([circ], hspmap)
         m = cartosky.Skymap(projection='cyl')

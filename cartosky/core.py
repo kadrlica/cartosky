@@ -42,11 +42,11 @@ class Skymap(object):
         # Eventually want to subclass GeoAxes
         ax = plt.gca()
         fig = ax.figure
-        subargs = ax.get_geometry()
+        subspec = ax.get_subplotspec()
         fig.delaxes(ax)
 
         self.projection = cartosky.proj.Proj(projection, **kwargs)
-        self.ax = fig.add_subplot(*subargs, projection=self.projection)
+        self.ax = fig.add_subplot(subspec, projection=self.projection)
 
         if do_allsky:
             self.ax.set_global()
