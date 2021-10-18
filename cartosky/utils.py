@@ -2,25 +2,28 @@
 """
 Random utilities
 """
-import os, os.path
+import os
+import os.path
 
 import numpy as np
-import healpy as hp
+
 
 def get_datadir():
-    from os.path import abspath,dirname,join
-    return join(dirname(abspath(__file__)),'data')
+    from os.path import abspath, dirname, join
+    return join(dirname(abspath(__file__)), 'data')
+
 
 def get_datafile(filename):
-    return os.path.join(get_datadir(),filename)
+    return os.path.join(get_datadir(), filename)
 
-def setdefaults(kwargs,defaults):
-    for k,v in defaults.items():
-        kwargs.setdefault(k,v)
+
+def setdefaults(kwargs, defaults):
+    for k, v in defaults.items():
+        kwargs.setdefault(k, v)
     return kwargs
 
 
-# Astropy is still way to inefficient with coordinate transformations:
+# Astropy is still way too inefficient with coordinate transformations:
 # https://github.com/astropy/astropy/issues/1717
 
 def gal2cel(glon, glat):
@@ -39,14 +42,15 @@ def gal2cel(glon, glat):
     sin_lcp_glon = np.sin(lcp - glon)
     cos_lcp_glon = np.cos(lcp - glon)
 
-    sin_d = (np.sin(de_gp) * sin_glat) \
-            + (np.cos(de_gp) * cos_glat * cos_lcp_glon)
+    sin_d = ((np.sin(de_gp) * sin_glat)
+             + (np.cos(de_gp) * cos_glat * cos_lcp_glon))
     ramragp = np.arctan2(cos_glat * sin_lcp_glon,
-                         (np.cos(de_gp) * sin_glat) \
-                         - (np.sin(de_gp) * cos_glat * cos_lcp_glon))
+                         ((np.cos(de_gp) * sin_glat)
+                          - (np.sin(de_gp) * cos_glat * cos_lcp_glon)))
     dec = np.arcsin(sin_d)
     ra = (ramragp + ra_gp + (2. * np.pi)) % (2. * np.pi)
     return np.degrees(ra), np.degrees(dec)
+
 
 def cel2gal(ra, dec):
     """
@@ -64,16 +68,17 @@ def cel2gal(ra, dec):
     cos_ra_gp = np.cos(ra - ra_gp)
 
     lcp = np.radians(122.932)
-    sin_b = (np.sin(de_gp) * sin_dec) \
-            + (np.cos(de_gp) * cos_dec * cos_ra_gp)
+    sin_b = ((np.sin(de_gp) * sin_dec)
+             + (np.cos(de_gp) * cos_dec * cos_ra_gp))
     lcpml = np.arctan2(cos_dec * sin_ra_gp,
-                       (np.cos(de_gp) * sin_dec) \
-                       - (np.sin(de_gp) * cos_dec * cos_ra_gp))
+                       ((np.cos(de_gp) * sin_dec)
+                        - (np.sin(de_gp) * cos_dec * cos_ra_gp)))
     glat = np.arcsin(sin_b)
     glon = (lcp - lcpml + (2. * np.pi)) % (2. * np.pi)
     return np.degrees(glon), np.degrees(glat)
 
-def angsep(lon1,lat1,lon2,lat2):
+
+def angsep(lon1, lat1, lon2, lat2):
     """
     Angular separation (deg) between two sky coordinates.
     Borrowed from astropy (www.astropy.org)
@@ -87,8 +92,8 @@ def angsep(lon1,lat1,lon2,lat2):
 
     [1] http://en.wikipedia.org/wiki/Great-circle_distance
     """
-    lon1,lat1 = np.radians([lon1,lat1])
-    lon2,lat2 = np.radians([lon2,lat2])
+    lon1, lat1 = np.radians([lon1, lat1])
+    lon2, lat2 = np.radians([lon2, lat2])
 
     sdlon = np.sin(lon2 - lon1)
     cdlon = np.cos(lon2 - lon1)
@@ -101,7 +106,8 @@ def angsep(lon1,lat1,lon2,lat2):
     num2 = clat1 * slat2 - slat1 * clat2 * cdlon
     denominator = slat1 * slat2 + clat1 * clat2 * cdlon
 
-    return np.degrees(np.arctan2(np.hypot(num1,num2), denominator))
+    return np.degrees(np.arctan2(np.hypot(num1, num2), denominator))
+
 
 class SphericalRotator:
     """
@@ -122,25 +128,25 @@ class SphericalRotator:
         if not zenithal:
             phi = (-np.pi / 2.) + np.radians(lon_ref)
             theta = np.radians(lat_ref)
-            psi = np.radians(90.) # psi = 90 corresponds to (0, 0) psi = -90 corresponds to (180, 0)
+            # psi = 90 corresponds to (0, 0) psi = -90 corresponds to (180, 0)
+            psi = np.radians(90.)
 
+        cos_psi, sin_psi = np.cos(psi), np.sin(psi)
+        cos_phi, sin_phi = np.cos(phi), np.sin(phi)
+        cos_theta, sin_theta = np.cos(theta), np.sin(theta)
 
-        cos_psi,sin_psi = np.cos(psi),np.sin(psi)
-        cos_phi,sin_phi = np.cos(phi),np.sin(phi)
-        cos_theta,sin_theta = np.cos(theta),np.sin(theta)
-
-        ## Numpy says don't use matrix anymore
-        #self.rotation_matrix = np.matrix([
-        #    [cos_psi * cos_phi - cos_theta * sin_phi * sin_psi,
-        #     cos_psi * sin_phi + cos_theta * cos_phi * sin_psi,
-        #     sin_psi * sin_theta],
-        #    [-sin_psi * cos_phi - cos_theta * sin_phi * cos_psi,
-        #     -sin_psi * sin_phi + cos_theta * cos_phi * cos_psi,
-        #     cos_psi * sin_theta],
-        #    [sin_theta * sin_phi,
-        #     -sin_theta * cos_phi,
-        #     cos_theta]
-        #])
+        # Numpy says don't use matrix anymore
+        # self.rotation_matrix = np.matrix([
+        #     [cos_psi * cos_phi - cos_theta * sin_phi * sin_psi,
+        #      cos_psi * sin_phi + cos_theta * cos_phi * sin_psi,
+        #      sin_psi * sin_theta],
+        #     [-sin_psi * cos_phi - cos_theta * sin_phi * cos_psi,
+        #      -sin_psi * sin_phi + cos_theta * cos_phi * cos_psi,
+        #      cos_psi * sin_theta],
+        #     [sin_theta * sin_phi,
+        #      -sin_theta * cos_phi,
+        #      cos_theta]
+        # ])
 
         self.rotation_matrix = np.array([
             [cos_psi * cos_phi - cos_theta * sin_phi * sin_psi,
@@ -156,18 +162,17 @@ class SphericalRotator:
 
         self.inverted_rotation_matrix = np.linalg.inv(self.rotation_matrix)
 
-    def cartesian(self,lon,lat):
+    def cartesian(self, lon, lat):
         lon = np.radians(lon)
         lat = np.radians(lat)
 
         x = np.cos(lat) * np.cos(lon)
         y = np.cos(lat) * np.sin(lon)
-        z =  np.sin(lat)
-        return np.array([x,y,z])
-
+        z = np.sin(lat)
+        return np.array([x, y, z])
 
     def rotate(self, lon, lat, invert=False):
-        vec = self.cartesian(lon,lat)
+        vec = self.cartesian(lon, lat)
 
         if invert:
             vec_prime = np.dot(np.array(self.inverted_rotation_matrix), vec)

@@ -1,7 +1,7 @@
-import sys
-import os
-try: from setuptools import setup
-except ImportError: from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 import versioneer
 
 URL = 'https://github.com/kadrlica/cartosky'
@@ -16,17 +16,17 @@ setup(
     url=URL,
     author='Alex Drlica-Wagner',
     author_email='kadrlica@fnal.gov',
-    scripts = [],
+    scripts=[],
     python_requires='>=3.6.0',
     setup_requires=['numpy'],
     install_requires=install_requires,
-    packages=['cartosky','cartosky.instrument'],
-    package_data={'cartosky':['data/*.txt','data/*.dat']},
+    packages=['cartosky', 'cartosky.instrument'],
+    package_data={'cartosky': ['data/*.txt', 'data/*.dat']},
     description="Python tools for making skymaps",
     long_description="See %s"%URL,
     platforms='any',
     keywords='python astronomy plotting',
-    classifiers = [
+    classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',

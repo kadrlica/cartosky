@@ -12,10 +12,10 @@ import cartopy.crs as ccrs
 from cartopy.mpl.geoaxes import GeoAxes
 from cartopy.geodesic import Geodesic
 from shapely.geometry.polygon import Polygon
-from shapely.geometry.point import Point
 
 from cartosky.utils import setdefaults
 from cartosky import healpix
+
 
 def default_transform(self, func, *args, transform=None, **kwargs):
     """
@@ -48,7 +48,6 @@ def default_crs(self, func, *args, crs=None, **kwargs):
     Comes from ProPlot
     """
     # Apply default crs
-    name = func.__name__
     if crs is None:
         crs = ccrs.PlateCarree()
     try:
@@ -61,6 +60,7 @@ def default_crs(self, func, *args, crs=None, **kwargs):
 
     return result
 
+
 def default_gridlines(self, func, *args, **kwargs):
     """
     Default gridlines options.
@@ -68,7 +68,7 @@ def default_gridlines(self, func, *args, **kwargs):
     fmt = mticker.FuncFormatter(lambda v, pos: '{:g}'.format(v))
     defaults = dict(linestyle=':', xformatter=fmt, yformatter=fmt, draw_labels=True,
                     crs=ccrs.PlateCarree())
-    setdefaults(kwargs,defaults)
+    setdefaults(kwargs, defaults)
     result = func(self, *args, **kwargs)
     return result
 
@@ -80,10 +80,11 @@ def ignore_warnings(self, func, *args, **kwargs):
     import warnings
 
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore",UserWarning)
+        warnings.simplefilter("ignore", UserWarning)
         result = func(self, *args, **kwargs)
 
     return result
+
 
 def _wrapper_decorator(driver):
     """
@@ -102,15 +103,16 @@ def _wrapper_decorator(driver):
         @functools.wraps(func)
         def _wrapper(self, *args, **kwargs):
             return driver(self, func, *args, **kwargs)
-        name = func.__name__
         _wrapper.__doc__ = None
         return _wrapper
     return decorator
 
+
 _default_transform = _wrapper_decorator(default_transform)
-_default_crs       = _wrapper_decorator(default_crs)
+_default_crs = _wrapper_decorator(default_crs)
 _default_gridlines = _wrapper_decorator(default_gridlines)
-_ignore_warnings   = _wrapper_decorator(ignore_warnings)
+_ignore_warnings = _wrapper_decorator(ignore_warnings)
+
 
 class SkyAxes(GeoAxes):
     """ Subclass cartopy.GeoAxes """
@@ -132,7 +134,7 @@ class SkyAxes(GeoAxes):
         -------
         feat  : feature artist
         """
-        ra  = np.asarray(ra).flatten()
+        ra = np.asarray(ra).flatten()
         dec = np.asarray(dec).flatten()
 
         if ra.shape != dec.shape:
@@ -142,8 +144,8 @@ class SkyAxes(GeoAxes):
         globe = self.projection.globe
 
         params = globe.to_proj4_params()
-        a,b = params['a'],params['b']
-        geod = Geodesic(radius=a,flattening=1 - b/a)
+        a, b = params['a'], params['b']
+        geod = Geodesic(radius=a, flattening=1 - b/a)
         radius_m = a * np.radians(radius)
 
         geoms = []
@@ -169,7 +171,7 @@ class SkyAxes(GeoAxes):
         """
         ra = np.linspace(-180, 180, num, endpoint=False)
         dec = np.linspace(-80, 80, num)
-        return self.tissot(*np.meshgrid(ra,dec),radius=radius,**kwargs)
+        return self.tissot(*np.meshgrid(ra, dec), radius=radius, **kwargs)
 
     # Change gridlines default to ls=':'
     gridlines = _default_gridlines(
@@ -232,8 +234,8 @@ class SkyAxes(GeoAxes):
     )
 
     def hpxmap(self, hpxmap, pixel=None, nside=None, xsize=800,
-                    lonra=None, latra=None, badval=healpix.UNSEEN, smooth=None,
-                    **kwargs):
+               lonra=None, latra=None, badval=healpix.UNSEEN, smooth=None,
+               **kwargs):
         """ Draw a healpix map with pcolormesh.
 
         Parameters
@@ -253,29 +255,29 @@ class SkyAxes(GeoAxes):
         -------
         im,lon,lat,values : mpl image with pixel longitude, latitude (deg), and values
         """
-        healpix.check_hpxmap(hpxmap,pixel,nside)
-        hpxmap = healpix.masked_array(hpxmap,badval)
+        healpix.check_hpxmap(hpxmap, pixel, nside)
+        hpxmap = healpix.masked_array(hpxmap, badval)
 
         if smooth:
             # To smooth we need the full map...
             # It'd be good to check we aren't going to blow anything up
-            hpxmap = healpix.create_map(hpxmap,pixel,nside,badval)
-            pixel,nside = None,None
-            hpxmap = healpix.masked_array(hpxmap,badval)
-            hpxmap = healpix.smooth(hpxmap,sigma=smooth)
+            hpxmap = healpix.create_map(hpxmap, pixel, nside, badval)
+            pixel, nside = None, None
+            hpxmap = healpix.masked_array(hpxmap, badval)
+            hpxmap = healpix.smooth(hpxmap, sigma=smooth)
 
-        vmin,vmax = np.percentile(hpxmap.compressed(),[2.5,97.5])
+        vmin, vmax = np.percentile(hpxmap.compressed(), [2.5, 97.5])
 
         defaults = dict(rasterized=True, vmin=vmin, vmax=vmax)
-        setdefaults(kwargs,defaults)
+        setdefaults(kwargs, defaults)
 
-        lon,lat,values = healpix.hpx2xy(hpxmap,pixel=pixel,nside=nside,
-                                        xsize=xsize,
-                                        lonra=lonra,latra=latra)
+        lon, lat, values = healpix.hpx2xy(hpxmap, pixel=pixel, nside=nside,
+                                          xsize=xsize,
+                                          lonra=lonra, latra=latra)
 
-        im = self.pcolormesh(lon,lat,values,**kwargs)
+        im = self.pcolormesh(lon, lat, values, **kwargs)
         self._sci(im)
-        return im,lon,lat,values
+        return im, lon, lat, values
 
     def hpxbin(self, lon, lat, nside=256, **kwargs):
         """
@@ -294,12 +296,12 @@ class SkyAxes(GeoAxes):
         --------
         hpxmap, im : healpix map and image
         """
-        hpxmap = healpix.hpxbin(lon,lat,nside)
-        return hpxmap, self.hpxmap(hpxmap,**kwargs)
+        hpxmap = healpix.hpxbin(lon, lat, nside)
+        return hpxmap, self.hpxmap(hpxmap, **kwargs)
 
     def hspmap(self, hspmap, pixel=None, nside=None, xsize=800,
-                    lonra=None, latra=None, badval=healpix.UNSEEN, smooth=None,
-                    **kwargs):
+               lonra=None, latra=None, badval=healpix.UNSEEN, smooth=None,
+               **kwargs):
         """ Draw a healpix map with pcolormesh.
 
         Parameters
@@ -325,20 +327,20 @@ class SkyAxes(GeoAxes):
 
         if not isinstance(hspmap, hsp.HealSparseMap):
             # Assume that it is a healpix map in RING ordering
-            hpxmap = hp.reorder(hspmap,r2n=True)
-            hspmap = hsp.HealSparseMap(healpix_map=hpxmap,nside_coverage=nside)
+            hpxmap = hp.reorder(hspmap, r2n=True)
+            hspmap = hsp.HealSparseMap(healpix_map=hpxmap, nside_coverage=nside)
 
-        lon,lat,values = healpix.hsp2xy(hspmap,xsize=xsize,lonra=lonra,latra=latra)
+        lon, lat, values = healpix.hsp2xy(hspmap, xsize=xsize, lonra=lonra, latra=latra)
 
         if smooth:
             msg = "Healsparse smoothing not implemented."
             raise Exception(msg)
 
-        vmin,vmax = np.percentile(values.compressed(),[2.5,97.5])
+        vmin, vmax = np.percentile(values.compressed(), [2.5, 97.5])
 
         defaults = dict(rasterized=True, vmin=vmin, vmax=vmax)
-        setdefaults(kwargs,defaults)
+        setdefaults(kwargs, defaults)
 
-        im = self.pcolormesh(lon,lat,values,**kwargs)
+        im = self.pcolormesh(lon, lat, values, **kwargs)
         self._sci(im)
-        return im,lon,lat,values
+        return im, lon, lat, values

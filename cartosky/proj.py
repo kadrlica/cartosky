@@ -22,7 +22,7 @@ CARTOPY_PROJS.update({
     'aitoff': pcrs.Aitoff,
     'hammer': pcrs.Hammer,
     'mbtfpq': pcrs.McBrydeThomasFlatPolarQuartic,
-    'kav7'  : pcrs.KavrayskiyVII,
+    'kav7': pcrs.KavrayskiyVII,
 })
 CARTOPY_PROJS_UNAVAIL = {
     'aea': 'AlbersEqualArea',
@@ -83,6 +83,7 @@ CARTOPY_KW_DEFAULTS = {
     'globe': pcrs.SkySphere()
 }
 
+
 def Proj(name, **kwargs):
     """
     Return a `cartopy.crs.Projection`.
@@ -126,7 +127,7 @@ def Proj(name, **kwargs):
             CARTOPY_KW_ALIASES.get(key, key): value
             for key, value in kwargs.items()
         }
-        kwproj = setdefaults(kwproj,CARTOPY_KW_DEFAULTS)
+        kwproj = setdefaults(kwproj, CARTOPY_KW_DEFAULTS)
         crs = CARTOPY_PROJS.get(name, None)
         if name == 'geos':  # fix common mistake
             kwproj.pop('central_latitude', None)

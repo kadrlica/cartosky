@@ -10,11 +10,12 @@ import numpy as np
 from cartosky.utils import get_datadir
 from cartosky.utils import SphericalRotator
 
+
 class DECamFocalPlane(object):
     """Class for storing and manipulating the corners of the DECam CCDs.
     """
 
-    filename = os.path.join(get_datadir(),'ccd_corners_xy_fill.dat')
+    filename = os.path.join(get_datadir(), 'ccd_corners_xy_fill.dat')
 
     def __init__(self):
         # This is not safe. Use yaml instead (extra dependency)
@@ -29,10 +30,10 @@ class DECamFocalPlane(object):
         # focal plane into x,y it is probably not worth trying to
         # deproject it right now...
 
-        #x,y = self.ccd_array[:,:,0],self.ccd_array[:,:,1]
-        #ra,dec = Projector(0,0).image2sphere(x.flat,y.flat)
-        #self.corners[:,:,0] = ra.reshape(x.shape)
-        #self.corners[:,:,1] = dec.reshape(y.shape)
+        # x,y = self.ccd_array[:,:,0],self.ccd_array[:,:,1]
+        # ra,dec = Projector(0,0).image2sphere(x.flat,y.flat)
+        # self.corners[:,:,0] = ra.reshape(x.shape)
+        # self.corners[:,:,1] = dec.reshape(y.shape)
 
     def rotate(self, ra, dec):
         """Rotate the corners of the DECam CCDs to a given sky location.
@@ -48,11 +49,13 @@ class DECamFocalPlane(object):
         """
         corners = np.copy(self.corners)
 
-        R = SphericalRotator(ra,dec)
-        _ra,_dec = R.rotate(corners[:,:,0].flat,corners[:,:,1].flat,invert=True)
+        R = SphericalRotator(ra, dec)
+        _ra, _dec = R.rotate(corners[:, :, 0].flat,
+                             corners[:, :, 1].flat,
+                             invert=True)
 
-        corners[:,:,0] = _ra.reshape(corners.shape[:2])
-        corners[:,:,1] = _dec.reshape(corners.shape[:2])
+        corners[:, :, 0] = _ra.reshape(corners.shape[:2])
+        corners[:, :, 1] = _dec.reshape(corners.shape[:2])
         return corners
 
     def project(self, basemap, ra, dec):
@@ -70,15 +73,13 @@ class DECamFocalPlane(object):
         corners : Projected corner locations of the CCDs
         """
         raise DeprecationWarning("DECamFocalPlane.project is deprecated.")
-        corners = self.rotate(ra,dec)
+        corners = self.rotate(ra, dec)
 
-        x,y = basemap.proj(corners[:,:,0],corners[:,:,1])
+        x, y = basemap.proj(corners[:, :, 0], corners[:, :, 1])
 
         # Remove CCDs that cross the map boundary
-        x[(np.ptp(x,axis=1) > np.pi)] = np.nan
+        x[(np.ptp(x, axis=1) > np.pi)] = np.nan
 
-        corners[:,:,0] = x
-        corners[:,:,1] = y
+        corners[:, :, 0] = x
+        corners[:, :, 1] = y
         return corners
-
-
