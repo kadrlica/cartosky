@@ -20,18 +20,20 @@ __all__ = [
 
 # Default radius of the Globe.
 # Eventually should be possible to use the unit sphere.
-#RADIUS=1.0e6
-RADIUS=6378137.0 # meters
+# RADIUS=1.0e6
+RADIUS = 6378137.0  # meters
+
 
 class SkySphere(Globe):
     """
     Spherical ccrs.Globe for sky plotting.
     """
 
-    def __init__(self,*args,**kwargs):
-        defaults = dict(ellipse=None,semimajor_axis=RADIUS,semiminor_axis=RADIUS)
-        kwargs = setdefaults(kwargs,defaults)
-        super().__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        defaults = dict(ellipse=None, semimajor_axis=RADIUS, semiminor_axis=RADIUS)
+        kwargs = setdefaults(kwargs, defaults)
+        super().__init__(*args, **kwargs)
+
 
 class Aitoff(_WarpedRectangularProjection):
     """
@@ -67,6 +69,7 @@ class Aitoff(_WarpedRectangularProjection):
     @property
     def threshold(self):  # how finely to interpolate line data, etc.
         return 1e4
+
 
 class Hammer(_WarpedRectangularProjection):
     """
@@ -109,7 +112,8 @@ class Hammer(_WarpedRectangularProjection):
 
 class McBrydeThomasFlatPolarQuartic(_WarpedRectangularProjection):
     """
-    The `McBryde-Thomas Flat Polar Quartic <https://it.wikipedia.org/wiki/File:McBryde-Thomas_flat-pole_quartic_projection_SW.jpg>`__
+    The `McBryde-Thomas Flat Polar Quartic
+    <https://it.wikipedia.org/wiki/File:McBryde-Thomas_flat-pole_quartic_projection_SW.jpg>`__
     projection.
     """
     #: Registered projection name.
@@ -144,6 +148,7 @@ class McBrydeThomasFlatPolarQuartic(_WarpedRectangularProjection):
         """
         """
         return 1e4
+
 
 class KavrayskiyVII(_WarpedRectangularProjection):
     """

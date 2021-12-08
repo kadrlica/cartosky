@@ -16,22 +16,23 @@ import tempfile
 
 import nbformat
 
+
 def _notebook_run(path):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
     with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
         args = ["jupyter", "nbconvert", "--to", "notebook", "--execute",
-          "--ExecutePreprocessor.timeout=60", "--log-level=WARN",
-          "--output", fout.name, path]
+                "--ExecutePreprocessor.timeout=60", "--log-level=WARN",
+                "--output", fout.name, path]
         subprocess.check_call(args)
 
         fout.seek(0)
         nb = nbformat.read(fout, nbformat.current_nbformat)
 
     errors = [output for cell in nb.cells if "outputs" in cell
-                     for output in cell["outputs"]\
-                     if output.output_type == "error"]
+              for output in cell["outputs"]
+              if output.output_type == "error"]
 
     return nb, errors
 
@@ -40,9 +41,9 @@ class TestTutorial(unittest.TestCase):
     """ Test the tutorial notebooks. """
 
     path = './tutorial'
-    
+
     def _test_notebook(self, path):
-        """ Test a notebook. 
+        """ Test a notebook.
 
         Parameters
         ----------
@@ -54,7 +55,7 @@ class TestTutorial(unittest.TestCase):
         """
         nb, errors = _notebook_run(path)
         assert errors == []
-        
+
     def _test_tutorial(self, i=1):
         """ Test a specific tutorial of the tutorial. """
         path = glob.glob(self.path+'/tutorial%i_*.ipynb'%i)[0]
